@@ -18,7 +18,7 @@ function mockCatalog (components) {
 describe('orderComponents', () => {
   it('puts named order first, then remaining title order', () => {
     const comps = [{ name: 'c' }, { name: 'a' }, { name: 'b' }]
-    const out = orderComponents(comps, { order: ['b'], exclude: [] })
+    const out = orderComponents(comps, { order: ['b'], exclude: [], include: [] })
     assert.deepEqual(
       out.map((c) => c.name),
       ['b', 'c', 'a']
@@ -27,10 +27,36 @@ describe('orderComponents', () => {
 
   it('honors exclude', () => {
     const comps = [{ name: 'a' }, { name: 'b' }]
-    const out = orderComponents(comps, { order: [], exclude: ['a'] })
+    const out = orderComponents(comps, { order: [], exclude: ['a'], include: [] })
     assert.deepEqual(
       out.map((c) => c.name),
       ['b']
+    )
+  })
+
+  it('honors include allowlist and uses include order when order empty', () => {
+    const comps = [{ name: 'stub' }, { name: 'home' }, { name: 'gk' }]
+    const out = orderComponents(comps, {
+      order: [],
+      exclude: [],
+      include: ['home', 'gk'],
+    })
+    assert.deepEqual(
+      out.map((c) => c.name),
+      ['home', 'gk']
+    )
+  })
+
+  it('exclude wins over include', () => {
+    const comps = [{ name: 'home' }, { name: 'gk' }]
+    const out = orderComponents(comps, {
+      order: [],
+      exclude: ['gk'],
+      include: ['home', 'gk'],
+    })
+    assert.deepEqual(
+      out.map((c) => c.name),
+      ['home']
     )
   })
 })
@@ -49,17 +75,24 @@ describe('buildSiteNavigation', () => {
       latest: { version: '', url: '/business-bootstrap/', title: 'Business Bootstrap' },
       versions: [{ version: '', url: '/business-bootstrap/', title: 'Business Bootstrap' }],
     }
-    // NavigationCatalog keys: version@component
+    const stub = {
+      name: 'ver',
+      title: 'Ver',
+      latest: { version: '', url: '/ver/', title: 'Ver' },
+      versions: [{ version: '', url: '/ver/', title: 'Ver' }],
+    }
     const nav = {
       '@home': [{ content: 'Welcome', url: '/home/', urlType: 'internal' }],
       '@business-bootstrap': [
         { content: 'Org infra', url: '/business-bootstrap/infra/', urlType: 'internal' },
       ],
+      '@ver': [{ content: 'Overview', url: '/ver/', urlType: 'internal' }],
     }
     const getNav = (component, version) => nav[`${version}@${component}`]
 
-    const catalog = mockCatalog([home, bb])
+    const catalog = mockCatalog([home, bb, stub])
     const tree = buildSiteNavigation(catalog, getNav, 'home', '', {
+      include: ['home', 'business-bootstrap'],
       order: ['home', 'business-bootstrap'],
       exclude: [],
     })

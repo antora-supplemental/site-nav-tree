@@ -1,5 +1,12 @@
 = Changelog
 
+== 0.2.0 — 2026-08-30
+
+* Add `include` allowlist so multi-source hubs can curate the forest without listing every stub in `exclude`.
+* When `include` is set and `order` is empty, forest order follows `include`.
+* Publish `site.keys.site_nav_tree_include` / `_exclude` / `_order` for breadcrumb alignment.
+* Docs: registering a content source ≠ adding a sidebar root.
+
 == 0.1.0 — 2026-08-30
 
 * Initial release: wrap `NavigationCatalog#getNavigation` into a site-wide component forest.

@@ -1,5 +1,5 @@
 = site-nav-tree
-:description: Antora extension that folds every component into the sidebar nav tree without replacing default nav-tree behavior.
+:description: Antora extension that folds curated components into the sidebar nav tree without replacing default nav-tree behavior.
 :page-audience: Antora hub maintainers with multiple components on one site
 :page-usage-context: Register under antora.extensions; optional Valentus companion partial
 :page-doc-type: reference
@@ -14,11 +14,18 @@ Multi-component Antora hubs hide other components behind a drawer (or, with Vale
 == What it does
 
 . After Antora builds per-component navigation, wrap `NavigationCatalog#getNavigation`.
-. Each call returns a **site-wide forest**: one root item per component; that component's existing nav trees become its children.
+. Each call returns a **site-wide forest**: one root item per curated component; that component's existing nav trees become its children.
 . Stock `nav-tree` partial and Default UI / Valentus expand-collapse JS keep working.
-. Sets `site.keys.site_nav_tree=true` for themes that want to adapt chrome.
+. Sets `site.keys.site_nav_tree=true` plus `site_nav_tree_include` / `site_nav_tree_exclude` / `site_nav_tree_order` (comma-separated) so breadcrumb pickers can share the same curation.
 
 It does **not** install OpenDevise Navigator or wipe Valentus `nav-menu` / `01-nav.js`.
+
+== Important: source ≠ forest root
+
+Registering a repo under `content.sources` publishes its pages and keeps xrefs/URLs.
+It does **not** mean that component must appear as a sidebar root.
+
+On hubs that wire many product stubs for URL space, use an **`include` allowlist** so new sources do not auto-join the forest. Prefer a hub portal page under `home` for thin tools; promote to `include` only when the component is worth browsing as a first-class tree.
 
 == Install
 
@@ -34,9 +41,19 @@ pnpm add -D github:antora-supplemental/site-nav-tree#main
 antora:
   extensions:
     - require: '@antora-supplemental/site-nav-tree'
-      # optional pin order (remainder stays title-sorted)
-      order: [home, general-knowledge, business-bootstrap]
-      # optional drop list
+      # Prefer allowlist on multi-source hubs (recommended)
+      include:
+        - home
+        - general-knowledge
+        - business-bootstrap
+        - agent-rules
+      # Optional pin order (defaults to include order when include is set)
+      order:
+        - home
+        - general-knowledge
+        - business-bootstrap
+        - agent-rules
+      # Optional denylist (wins over include)
       # exclude: [internal-draft]
 ----
 
@@ -51,26 +68,31 @@ cp node_modules/@antora-supplemental/site-nav-tree/ui/partials/nav-menu.hbs supp
 
 Git dependency path may differ; use the package's `ui/partials/nav-menu.hbs`.
 
+Align the breadcrumb component picker with the same curation (read `site.keys.site_nav_tree_*` via a small helper, or hard-match the playbook `include` list).
+
 == Config
 
 [cols="1,2"]
 |===
 | Key | Meaning
 
+| `include`
+| **Allowlist** of component names. When non-empty, only these roots appear. Preferred default for hubs that register many product sources.
+
 | `order`
-| Component names first in the tree (array or comma-separated). Unlisted components follow, title-sorted.
+| Component names first in the tree (array or comma-separated). When empty and `include` is set, `include` order is used. Unlisted included components follow, title-sorted.
 
 | `exclude`
-| Component names omitted from the site tree.
+| Component names omitted from the site tree (wins over `include`).
 |===
 
 == Tradeoff
 
-Every page HTML embeds every component's nav. Fine for modest hubs; very large nav forests may want a later lazy-load pass. Prefer this over a full navigator replacement until that pain is real.
+Every page HTML embeds every **included** component's nav. Fine for modest hubs; very large nav forests may want a later lazy-load pass. Prefer this over a full navigator replacement until that pain is real.
 
 == Facto
 
-Suggested member of the Facto compose pack (Valentus stays lean — theme only). Enable explicitly in the playbook until Facto's fragment lists it by default.
+Suggested member of the Facto compose pack (Valentus stays lean — theme only). Enable explicitly in the playbook until Facto's fragment lists it by default. Always set `include` (or a deliberate `exclude`) — do not ship the all-components default on a fat hub.
 
 == Related
 

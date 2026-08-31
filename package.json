@@ -1,7 +1,7 @@
 {
   "name": "@antora-supplemental/site-nav-tree",
-  "version": "0.1.0",
-  "description": "Antora extension: fold every component into the sidebar nav tree while keeping default nav-tree expand/collapse behavior",
+  "version": "0.2.0",
+  "description": "Antora extension: fold curated components into the sidebar nav tree while keeping default nav-tree expand/collapse behavior",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js"
