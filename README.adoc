@@ -70,6 +70,10 @@ Git dependency path may differ; use the package's `ui/partials/nav-menu.hbs`.
 
 Align the breadcrumb component picker with the same curation (read `site.keys.site_nav_tree_*` via a small helper, or hard-match the playbook `include` list).
 
+Also copy `ui/js/site-nav-tree-current.js` into hub `supplemental-ui/js/` and load it **after** `site.js` (footer, non-deferred or deferred after site.js) so expand state prefers the deepest `is-current-page` when URLs collide.
+
+Do **not** put the component start page as the first `nav.adoc` item when site-nav-tree already provides the component root (`* xref:index.adoc[Business Bootstrap]` under a Business Bootstrap root → BB > BB). Linked parents are for **section** landings inside a component (`Email`, `Org infra`), not for repeating the component title.
+
 == Config
 
 [cols="1,2"]

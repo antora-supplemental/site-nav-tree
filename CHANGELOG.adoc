@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.2.1 — 2026-08-30
+
+* Flatten Antora's anonymous single-tree wrapper when wrapping component roots (fixes empty expanded carets).
+* Unwrap a leading start-page nav item that duplicates the component root title/URL (no Business Bootstrap > Business Bootstrap).
+* Ship companion `ui/js/site-nav-tree-current.js` to prefer the deepest `is-current-page` when URLs collide across the forest.
+
 == 0.2.0 — 2026-08-30
 
 * Add `include` allowlist so multi-source hubs can curate the forest without listing every stub in `exclude`.
