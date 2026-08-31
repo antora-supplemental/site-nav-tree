@@ -1,0 +1,42 @@
+{
+  "name": "@antora-supplemental/site-nav-tree",
+  "version": "0.1.0",
+  "description": "Antora extension: fold every component into the sidebar nav tree while keeping default nav-tree expand/collapse behavior",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "files": [
+    "lib/**/*",
+    "ui/**/*",
+    "README.adoc",
+    "CHANGELOG.adoc",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT",
+  "keywords": [
+    "antora",
+    "antora-extension",
+    "navigation",
+    "sidebar",
+    "multi-component",
+    "nav-tree"
+  ],
+  "homepage": "https://github.com/antora-supplemental/site-nav-tree",
+  "bugs": {
+    "url": "https://github.com/antora-supplemental/site-nav-tree/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antora-supplemental/site-nav-tree.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "@antora/site-generator": ">=3.1.0"
+  }
+}

@@ -1,0 +1,8 @@
+= Changelog
+
+== 0.1.0 — 2026-08-30
+
+* Initial release: wrap `NavigationCatalog#getNavigation` into a site-wide component forest.
+* Keeps default Antora / Valentus `nav-tree` behavior (no UI wipe).
+* Optional `order` / `exclude` config; sets `site.keys.site_nav_tree`.
+* Companion Valentus `ui/partials/nav-menu.hbs` drops redundant component title line.
