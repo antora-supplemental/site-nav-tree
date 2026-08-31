@@ -136,4 +136,70 @@ describe('buildSiteNavigation', () => {
     assert.equal(tree[0].items.length, 1)
     assert.equal(tree[0].items[0].content, 'Email')
   })
+
+  it('keeps multi-root component nav siblings under the component root', () => {
+    // Antora often returns several titled trees (Diátaxis areas) for one component.
+    // Flatten must not drop siblings when more than one tree is present.
+    const gk = {
+      name: 'general-knowledge',
+      title: 'General Knowledge',
+      latest: { version: '', url: '/general-knowledge/', title: 'General Knowledge' },
+      versions: [{ version: '', url: '/general-knowledge/', title: 'General Knowledge' }],
+    }
+    const area = (content, url) => ({
+      content,
+      url,
+      urlType: 'internal',
+      items: [{ content: `${content} child`, url: `${url}child/`, urlType: 'internal' }],
+    })
+    const nav = {
+      '@general-knowledge': [
+        { content: '🎓 Tutorials', items: [{ content: 'Onboarding', url: '/general-knowledge/tutorials/onboarding/' }] },
+        area('How-to Guides', '/general-knowledge/how-to/'),
+        area('Reference', '/general-knowledge/reference/'),
+        area('Explanation', '/general-knowledge/explanation/'),
+      ],
+    }
+    const getNav = (component, version) => nav[`${version}@${component}`]
+    const tree = buildSiteNavigation(mockCatalog([gk]), getNav, 'general-knowledge', '', {
+      include: ['general-knowledge'],
+    })
+
+    assert.equal(tree.length, 1)
+    assert.deepEqual(
+      tree[0].items.map((i) => i.content),
+      ['🎓 Tutorials', 'How-to Guides', 'Reference', 'Explanation']
+    )
+  })
+
+  it('preserves sibling linked parents after flattening one anonymous wrapper', () => {
+    const gk = {
+      name: 'general-knowledge',
+      title: 'General Knowledge',
+      latest: { version: '', url: '/general-knowledge/', title: 'General Knowledge' },
+      versions: [{ version: '', url: '/general-knowledge/', title: 'General Knowledge' }],
+    }
+    const nav = {
+      '@general-knowledge': [
+        {
+          items: [
+            { content: 'Changelog', url: '/general-knowledge/changelog/' },
+            { content: '🎓 Tutorials', items: [{ content: 'Onboarding', url: '/gk/t/' }] },
+            { content: 'How-to Guides', url: '/general-knowledge/how-to/', items: [{ content: 'Nushell', url: '/gk/h/' }] },
+            { content: 'Reference', url: '/general-knowledge/reference/', items: [{ content: 'Tools', url: '/gk/r/' }] },
+            { content: 'Explanation', url: '/general-knowledge/explanation/', items: [{ content: 'Why', url: '/gk/e/' }] },
+          ],
+        },
+      ],
+    }
+    const getNav = (component, version) => nav[`${version}@${component}`]
+    const tree = buildSiteNavigation(mockCatalog([gk]), getNav, 'general-knowledge', '', {
+      include: ['general-knowledge'],
+    })
+
+    assert.deepEqual(
+      tree[0].items.map((i) => i.content),
+      ['Changelog', '🎓 Tutorials', 'How-to Guides', 'Reference', 'Explanation']
+    )
+  })
 })

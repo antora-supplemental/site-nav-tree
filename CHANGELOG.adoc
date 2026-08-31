@@ -1,5 +1,9 @@
 = Changelog
 
+== 0.2.2 — 2026-08-30
+
+* Regression tests: multi-root Diátaxis sibling trees under one component stay visible after flatten/unwrap (several titled trees, or linked parents under one anonymous wrapper).
+
 == 0.2.1 — 2026-08-30
 
 * Flatten Antora's anonymous single-tree wrapper when wrapping component roots (fixes empty expanded carets).
