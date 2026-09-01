@@ -1,5 +1,9 @@
 = Changelog
 
+== 0.2.3 (2026-09-01)
+
+* README: document multi-nav concatenation vs `include::` nesting footgun with site-nav-tree.
+
 == 0.2.2 — 2026-08-30
 
 * Regression tests: multi-root Diátaxis sibling trees under one component stay visible after flatten/unwrap (several titled trees, or linked parents under one anonymous wrapper).

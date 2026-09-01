@@ -94,6 +94,18 @@ Do **not** put the component start page as the first `nav.adoc` item when site-n
 
 Every page HTML embeds every **included** component's nav. Fine for modest hubs; very large nav forests may want a later lazy-load pass. Prefer this over a full navigator replacement until that pain is real.
 
+== Multi-nav files vs `include::` (component modules)
+
+Antora allows multiple `nav:` entries in `antora.yml`. Each file becomes a **separate nav tree** concatenated as **siblings** under the component — not nested under matching linked parents in another nav file.
+
+**Anti-pattern:** list `modules/ROOT/nav.adoc`, `modules/specifications/nav.adoc`, `modules/secrets-manager/nav.adoc`, … in `antora.yml`. The sidebar then shows submodule Diátaxis groups (for example `.Overview & design`) as if they were top-level component IA, and deep-page navigation can collapse unrelated branches when this extension is enabled.
+
+**Preferred:** one `nav:` entry on ROOT; nest modules with `include::partial$…[]` or `include::module$nav.adoc[]` under the linked parent (`* xref:secrets-manager:index.adoc[Secrets Manager]`). The included file uses `**` / `***` depth under that parent.
+
+Official docs describe per-module nav files as a common *authoring* layout but do not emphasize that registration **concatenates** lists. The nesting pattern lives on a separate page (https://docs.antora.org/antora/latest/navigation/include-lists/[Compose Navigation Files]). When using site-nav-tree, treat concatenation as a footgun unless you intentionally want parallel sibling trees.
+
+Hub reference diagram: DevCentr docs hub `nav-typology.svg` and xref:publishing/antora-essential-extensions.adoc#multi-nav-files-vs-include-component-modules[multi-nav vs include] (docs hub).
+
 == Facto
 
 Suggested member of the Facto compose pack (Valentus stays lean — theme only). Enable explicitly in the playbook until Facto's fragment lists it by default. Always set `include` (or a deliberate `exclude`) — do not ship the all-components default on a fat hub.
