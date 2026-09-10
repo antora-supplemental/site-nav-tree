@@ -1,5 +1,9 @@
 = Changelog
 
+== Unreleased
+
+* README: Valentus keeps the mast **component** picker with site-nav-tree (mobile jump); only the trail’s duplicate component-root crumb is suppressed. Version sits to the right of the component.
+
 == 0.3.1 — 2026-09-09
 
 * README: recommend shipping nav-typology (+ companion UI; diataxis plugin when Diátaxis) whenever site-nav-tree is enabled.

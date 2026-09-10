@@ -72,7 +72,7 @@ Align the breadcrumb component picker with the same curation (read `site.keys.si
 
 Also copy `ui/js/site-nav-tree-current.js` into hub `supplemental-ui/js/` and load it **after** `site.js` (footer, non-deferred or deferred after site.js) so expand state prefers the deepest `is-current-page` when URLs collide **and** so open trees are restored from `sessionStorage` after navigation (other component roots stay expanded).
 
-When Valentus is active with `site.keys.site_nav_tree=true`, the theme hides the mast **component** picker by default (components live in the sidebar forest). Hubs should not need a one-off breadcrumb override for that.
+When Valentus is active with `site.keys.site_nav_tree=true`, the theme **keeps** the mast component picker (mobile jump target + context) and places version to its right; it only suppresses a **trail** crumb that duplicates the component root so the sidebar forest and mast do not both spell the same name in the path. Hubs should not need a one-off breadcrumb override for that.
 
 Do **not** put the component start page as the first `nav.adoc` item when site-nav-tree already provides the component root (`* xref:index.adoc[Business Bootstrap]` under a Business Bootstrap root → BB > BB). Linked parents are for **section** landings inside a component (`Email`, `Org infra`), not for repeating the component title.
 
