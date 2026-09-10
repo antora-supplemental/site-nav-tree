@@ -1,5 +1,9 @@
 = Changelog
 
+== 0.3.1 — 2026-09-09
+
+* README: recommend shipping nav-typology (+ companion UI; diataxis plugin when Diátaxis) whenever site-nav-tree is enabled.
+
 == 0.3.0 — 2026-09-09
 
 * Companion `ui/js/site-nav-tree-current.js`: retain nav expand/collapse across page changes via `sessionStorage` (`site-nav-tree:expanded-v1`). Current-path rewrite no longer collapses other opened component trees.

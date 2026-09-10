@@ -76,6 +76,12 @@ When Valentus is active with `site.keys.site_nav_tree=true`, the theme hides the
 
 Do **not** put the component start page as the first `nav.adoc` item when site-nav-tree already provides the component root (`* xref:index.adoc[Business Bootstrap]` under a Business Bootstrap root → BB > BB). Linked parents are for **section** landings inside a component (`Email`, `Org infra`), not for repeating the component title.
 
+== Recommended pairing: nav-typology
+
+You *can* use `@antora-supplemental/nav-typology` without this extension.
+
+When you enable **site-nav-tree**, also ship **nav-typology** (+ companion UI copied into hub `supplemental-ui/`) so forest roots and structural buckets get uniform SVG icons. Add `@antora-supplemental/nav-typology-diataxis` when the hub uses Diátaxis. Register typology **after** site-nav-tree. See the nav-typology README.
+
 == Config
 
 [cols="1,2"]
