@@ -1,5 +1,10 @@
 = Changelog
 
+== 0.3.0 — 2026-09-09
+
+* Companion `ui/js/site-nav-tree-current.js`: retain nav expand/collapse across page changes via `sessionStorage` (`site-nav-tree:expanded-v1`). Current-path rewrite no longer collapses other opened component trees.
+* Persist expansion on `.nav-item-toggle` clicks.
+
 == 0.2.3 (2026-09-01)
 
 * README: document multi-nav concatenation vs `include::` nesting footgun with site-nav-tree.
