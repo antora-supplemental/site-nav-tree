@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 const { describe, it } = require('node:test')
 const assert = require('node:assert/strict')
@@ -7,6 +7,7 @@ const {
   orderComponents,
   flattenNavTrees,
   unwrapStartPageDuplicate,
+  hardSortHomeThenChangelog,
 } = require('../lib/build-site-navigation')
 
 function mockCatalog (components) {
@@ -82,7 +83,7 @@ describe('flattenNavTrees', () => {
 })
 
 describe('unwrapStartPageDuplicate', () => {
-  it('drops a leaf start-page link that matches component URL', () => {
+  it('renames a leaf start-page link to Home instead of dropping it', () => {
     const items = [
       { content: 'Business Bootstrap', url: '/business-bootstrap/' },
       { content: 'Email', url: '/business-bootstrap/email/' },
@@ -90,11 +91,12 @@ describe('unwrapStartPageDuplicate', () => {
     const out = unwrapStartPageDuplicate(items, '/business-bootstrap/', 'Business Bootstrap')
     assert.deepEqual(
       out.map((i) => i.content),
-      ['Email']
+      ['Home', 'Email']
     )
+    assert.equal(out[0].url, '/business-bootstrap/')
   })
 
-  it('drops by title when URL styles differ', () => {
+  it('renames by title when URL styles differ', () => {
     const items = [
       { content: 'Business Bootstrap', url: '/business-bootstrap/index.html' },
       { content: 'Email', url: '/business-bootstrap/email/' },
@@ -102,13 +104,74 @@ describe('unwrapStartPageDuplicate', () => {
     const out = unwrapStartPageDuplicate(items, '/business-bootstrap/', 'Business Bootstrap')
     assert.deepEqual(
       out.map((i) => i.content),
-      ['Email']
+      ['Home', 'Email']
+    )
+  })
+
+  it('promotes linked start-page parent children and prepends Home', () => {
+    const items = [
+      {
+        content: 'Overview',
+        url: '/platforms/',
+        items: [{ content: 'Child', url: '/platforms/child/' }],
+      },
+      { content: 'Other', url: '/platforms/other/' },
+    ]
+    const out = unwrapStartPageDuplicate(items, '/platforms/', 'Platforms')
+    assert.deepEqual(
+      out.map((i) => i.content),
+      ['Home', 'Child', 'Other']
+    )
+  })
+})
+
+describe('hardSortHomeThenChangelog', () => {
+  it('puts Home then Changelog before the rest', () => {
+    const items = [
+      { content: 'Email', url: '/bb/email/' },
+      { content: 'Changelog', url: '/bb/changelog/' },
+      { content: 'Home', url: '/bb/' },
+      { content: 'Vault', url: '/bb/vault/' },
+    ]
+    assert.deepEqual(
+      hardSortHomeThenChangelog(items).map((i) => i.content),
+      ['Home', 'Changelog', 'Email', 'Vault']
+    )
+  })
+
+  it('treats Overview as Home and Activity Log as changelog', () => {
+    const items = [
+      { content: 'Usage', url: '/ar/usage/' },
+      { content: 'Activity Log', url: '/home/activity-log/' },
+      { content: 'Overview', url: '/ar/' },
+    ]
+    assert.deepEqual(
+      hardSortHomeThenChangelog(items).map((i) => i.content),
+      ['Overview', 'Activity Log', 'Usage']
+    )
+  })
+
+  it('recurses into children', () => {
+    const items = [
+      {
+        content: 'DevCentr',
+        items: [
+          { content: 'Capabilities', url: '/platforms/devcentr/capabilities/' },
+          { content: 'Changelog', url: '/platforms/devcentr/changelog/' },
+          { content: 'Home', url: '/platforms/devcentr/' },
+        ],
+      },
+    ]
+    const out = hardSortHomeThenChangelog(items)
+    assert.deepEqual(
+      out[0].items.map((i) => i.content),
+      ['Home', 'Changelog', 'Capabilities']
     )
   })
 })
 
 describe('buildSiteNavigation', () => {
-  it('flattens anonymous tree and unwraps start-page duplicate', () => {
+  it('flattens anonymous tree, renames start-page duplicate to Home, hard-sorts', () => {
     const bb = {
       name: 'business-bootstrap',
       title: 'Business Bootstrap',
@@ -121,6 +184,7 @@ describe('buildSiteNavigation', () => {
           items: [
             { content: 'Business Bootstrap', url: '/business-bootstrap/', urlType: 'internal' },
             { content: 'Email', url: '/business-bootstrap/email/', urlType: 'internal' },
+            { content: 'Changelog', url: '/business-bootstrap/changelog/', urlType: 'internal' },
           ],
         },
       ],
@@ -133,13 +197,13 @@ describe('buildSiteNavigation', () => {
     assert.equal(tree.length, 1)
     assert.equal(tree[0].content, 'Business Bootstrap')
     assert.equal(tree[0].url, '/business-bootstrap/')
-    assert.equal(tree[0].items.length, 1)
-    assert.equal(tree[0].items[0].content, 'Email')
+    assert.deepEqual(
+      tree[0].items.map((i) => i.content),
+      ['Home', 'Changelog', 'Email']
+    )
   })
 
   it('keeps multi-root component nav siblings under the component root', () => {
-    // Antora often returns several titled trees (Diátaxis areas) for one component.
-    // Flatten must not drop siblings when more than one tree is present.
     const gk = {
       name: 'general-knowledge',
       title: 'General Knowledge',
@@ -154,7 +218,7 @@ describe('buildSiteNavigation', () => {
     })
     const nav = {
       '@general-knowledge': [
-        { content: '🎓 Tutorials', items: [{ content: 'Onboarding', url: '/general-knowledge/tutorials/onboarding/' }] },
+        { content: 'Tutorials', items: [{ content: 'Onboarding', url: '/general-knowledge/tutorials/onboarding/' }] },
         area('How-to Guides', '/general-knowledge/how-to/'),
         area('Reference', '/general-knowledge/reference/'),
         area('Explanation', '/general-knowledge/explanation/'),
@@ -168,7 +232,7 @@ describe('buildSiteNavigation', () => {
     assert.equal(tree.length, 1)
     assert.deepEqual(
       tree[0].items.map((i) => i.content),
-      ['🎓 Tutorials', 'How-to Guides', 'Reference', 'Explanation']
+      ['Tutorials', 'How-to Guides', 'Reference', 'Explanation']
     )
   })
 
@@ -184,7 +248,7 @@ describe('buildSiteNavigation', () => {
         {
           items: [
             { content: 'Changelog', url: '/general-knowledge/changelog/' },
-            { content: '🎓 Tutorials', items: [{ content: 'Onboarding', url: '/gk/t/' }] },
+            { content: 'Tutorials', items: [{ content: 'Onboarding', url: '/gk/t/' }] },
             { content: 'How-to Guides', url: '/general-knowledge/how-to/', items: [{ content: 'Nushell', url: '/gk/h/' }] },
             { content: 'Reference', url: '/general-knowledge/reference/', items: [{ content: 'Tools', url: '/gk/r/' }] },
             { content: 'Explanation', url: '/general-knowledge/explanation/', items: [{ content: 'Why', url: '/gk/e/' }] },
@@ -199,7 +263,51 @@ describe('buildSiteNavigation', () => {
 
     assert.deepEqual(
       tree[0].items.map((i) => i.content),
-      ['Changelog', '🎓 Tutorials', 'How-to Guides', 'Reference', 'Explanation']
+      ['Changelog', 'Tutorials', 'How-to Guides', 'Reference', 'Explanation']
+    )
+  })
+
+  it('keeps titled multi-origin platform trees as siblings under Platforms', () => {
+    const platforms = {
+      name: 'platforms',
+      title: 'Platforms',
+      latest: { version: '', url: '/platforms/', title: 'Platforms' },
+      versions: [{ version: '', url: '/platforms/', title: 'Platforms' }],
+    }
+    const nav = {
+      '@platforms': [
+        {
+          content: 'DevCentr',
+          items: [
+            { content: 'Home', url: '/platforms/devcentr/' },
+            { content: 'Changelog', url: '/platforms/devcentr/changelog/' },
+            { content: 'Capabilities', url: '/platforms/devcentr/capabilities/' },
+          ],
+        },
+        {
+          content: 'devcentr.org',
+          items: [
+            { content: 'Home', url: '/platforms/devcentr-org/' },
+            { content: 'Changelog', url: '/platforms/devcentr-org/changelog/' },
+          ],
+        },
+      ],
+    }
+    const getNav = (component, version) => nav[`${version}@${component}`]
+    const tree = buildSiteNavigation(mockCatalog([platforms]), getNav, 'platforms', '', {
+      include: ['platforms'],
+    })
+
+    assert.equal(tree.length, 1)
+    assert.equal(tree[0].content, 'Platforms')
+    assert.equal(tree[0].url, '/platforms/')
+    assert.deepEqual(
+      tree[0].items.map((i) => i.content),
+      ['DevCentr', 'devcentr.org']
+    )
+    assert.deepEqual(
+      tree[0].items[0].items.map((i) => i.content),
+      ['Home', 'Changelog', 'Capabilities']
     )
   })
 })

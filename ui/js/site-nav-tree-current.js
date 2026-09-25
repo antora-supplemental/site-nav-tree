@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Prefer the deepest is-current-page when site-nav-tree inlines many components.
  * Default UI expands only the first match; a duplicated start-page URL on the
  * component root then leaves children behind an inactive anonymous wrapper.
@@ -6,16 +6,33 @@
  * Also retains expand/collapse state across page navigations via sessionStorage
  * so opening other component trees is not wiped when the current-path rewrite
  * runs (which clears and re-applies is-active along the active page only).
+ *
+ * Expand keys use component-absolute pathnames (not relative hrefs) so SoftNav
+ * depth changes and absolutize() do not look like inject/remove of the tree.
  */
 ;(function () {
   'use strict'
 
-  var STORAGE_KEY = 'site-nav-tree:expanded-v1'
+  // v2: pathname keys (stable across URL depth / SoftNav absolutize)
+  var STORAGE_KEY = 'site-nav-tree:expanded-v2'
+
+  function normalizeHref (href) {
+    if (!href) return ''
+    try {
+      var u = new URL(href, window.location.href)
+      var path = u.pathname || '/'
+      path = path.replace(/\/index\.html$/i, '/')
+      if (path.length > 1) path = path.replace(/\/+$/, '/') || '/'
+      return path
+    } catch (e) {
+      return String(href).split(/[?#]/)[0]
+    }
+  }
 
   function itemKey (el) {
     var link = el.querySelector(':scope > .nav-link')
     var href = link && link.getAttribute('href')
-    if (href) return 'h:' + href
+    if (href) return 'h:' + normalizeHref(href)
     var labelEl = el.querySelector(':scope > .nav-text, :scope > .nav-link')
     var label = ((labelEl && labelEl.textContent) || '').trim().replace(/\s+/g, ' ')
     var parts = [(el.getAttribute('data-depth') || '0') + ':' + label]
@@ -24,7 +41,7 @@
       var plink = parent.querySelector(':scope > .nav-link')
       var phref = plink && plink.getAttribute('href')
       if (phref) {
-        parts.unshift('h:' + phref)
+        parts.unshift('h:' + normalizeHref(phref))
       } else {
         var plabelEl = parent.querySelector(':scope > .nav-text, :scope > .nav-link')
         var plabel = ((plabelEl && plabelEl.textContent) || '').trim().replace(/\s+/g, ' ')
@@ -80,6 +97,11 @@
     saveExpanded(collectExpanded(menu))
   }
 
+  /**
+   * After SoftNav swaps the nav panel, restore remembered expansion *and*
+   * the current-page path without collapsing non-current siblings the reader
+   * left open under other (or the same) component roots.
+   */
   function siteNavTreeCurrent () {
     var menu = document.querySelector('.nav-container [data-panel=menu]')
     if (!menu) return
@@ -102,10 +124,15 @@
       if (el !== best) el.classList.remove('is-current-page')
     })
 
-    // Drop path markers and expansion from a prior page; sessionStorage restores
-    // trees the reader left open outside the new current path.
-    menu.querySelectorAll('.nav-item.is-active, .nav-item.is-current-path').forEach(function (el) {
-      el.classList.remove('is-active', 'is-current-path')
+    // Drop path markers from a prior page; keep remembered expansions via
+    // sessionStorage so SoftNav rebind does not look like inject/remove.
+    menu.querySelectorAll('.nav-item.is-current-path').forEach(function (el) {
+      el.classList.remove('is-current-path')
+    })
+    // Clear is-active only along items that will be rebuilt from current path;
+    // remembered keys re-apply sibling / other-component expansion next.
+    menu.querySelectorAll('.nav-item.is-active').forEach(function (el) {
+      el.classList.remove('is-active')
     })
 
     var node = best
