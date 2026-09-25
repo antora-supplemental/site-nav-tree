@@ -1,5 +1,8 @@
-﻿= Changelog
+= Changelog
 
+== 0.4.1 - 2026-09-25
+
+* Companion `site-nav-tree-current.js`: persist/restore `.nav-panel-menu` scrollTop via `sessionStorage` (`site-nav-tree:scroll-y`) so SoftNav swaps and full navigations keep left-rail position independently of the content column.
 == 0.4.0 - 2026-09-25
 
 * **Home then Changelog hard-sort:** after unwrap, keep a **Home** child (rename start-page duplicates instead of dropping them) and hard-sort each branch Home → Activity Log/Changelog → rest (recursive).

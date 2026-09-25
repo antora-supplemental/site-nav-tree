@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Prefer the deepest is-current-page when site-nav-tree inlines many components.
  * Default UI expands only the first match; a duplicated start-page URL on the
  * component root then leaves children behind an inactive anonymous wrapper.
@@ -9,12 +9,16 @@
  *
  * Expand keys use component-absolute pathnames (not relative hrefs) so SoftNav
  * depth changes and absolutize() do not look like inject/remove of the tree.
+ *
+ * Nav panel scrollTop is persisted separately so left-rail position survives
+ * SoftNav swaps and full document loads independently of the content column.
  */
 ;(function () {
   'use strict'
 
   // v2: pathname keys (stable across URL depth / SoftNav absolutize)
   var STORAGE_KEY = 'site-nav-tree:expanded-v2'
+  var SCROLL_KEY = 'site-nav-tree:scroll-y'
 
   function normalizeHref (href) {
     if (!href) return ''
@@ -73,7 +77,7 @@
       })
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(unique))
     } catch (e) {
-      /* private mode / quota — ignore */
+      /* private mode / quota - ignore */
     }
   }
 
@@ -97,6 +101,40 @@
     saveExpanded(collectExpanded(menu))
   }
 
+  function navScrollEl () {
+    return document.querySelector('.nav-container [data-panel=menu]')
+  }
+
+  function saveNavScroll () {
+    var el = navScrollEl()
+    if (!el) return
+    try {
+      sessionStorage.setItem(SCROLL_KEY, String(el.scrollTop || 0))
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function restoreNavScroll () {
+    var el = navScrollEl()
+    if (!el) return
+    var raw
+    try {
+      raw = sessionStorage.getItem(SCROLL_KEY)
+    } catch (e) {
+      return
+    }
+    if (raw == null || raw === '') return
+    var y = parseInt(raw, 10)
+    if (isNaN(y)) return
+    el.scrollTop = y
+    // Layout / font metrics can settle a frame later after SoftNav swaps.
+    requestAnimationFrame(function () {
+      var again = navScrollEl()
+      if (again) again.scrollTop = y
+    })
+  }
+
   /**
    * After SoftNav swaps the nav panel, restore remembered expansion *and*
    * the current-page path without collapsing non-current siblings the reader
@@ -112,6 +150,7 @@
     if (!currents.length) {
       applyExpanded(menu, remembered)
       persistMenu(menu)
+      restoreNavScroll()
       return
     }
 
@@ -146,6 +185,7 @@
 
     applyExpanded(menu, remembered)
     persistMenu(menu)
+    restoreNavScroll()
   }
 
   function onToggleClick (e) {
@@ -160,12 +200,60 @@
   }
 
   window.siteNavTreeCurrent = siteNavTreeCurrent
+  window.siteNavTreeSaveScroll = saveNavScroll
+  window.siteNavTreeRestoreScroll = restoreNavScroll
+
   document.addEventListener('click', onToggleClick)
+
+  // Persist scroll while the reader moves the left rail; also right before unload
+  // so a full navigation (cross-component) keeps the position.
+  document.addEventListener(
+    'scroll',
+    function (e) {
+      var el = navScrollEl()
+      if (!el) return
+      if (e.target === el || (e.target && el.contains(e.target))) saveNavScroll()
+    },
+    true
+  )
+  // Some browsers only fire scroll on the element itself (not via capture from document).
+  function bindPanelScroll () {
+    var el = navScrollEl()
+    if (!el || el.getAttribute('data-snt-scroll-bound')) return
+    el.setAttribute('data-snt-scroll-bound', '1')
+    el.addEventListener('scroll', saveNavScroll, { passive: true })
+  }
+  bindPanelScroll()
+  window.addEventListener('beforeunload', saveNavScroll)
+  // Capture nav link clicks early so full navigations remember scroll.
+  document.addEventListener(
+    'click',
+    function (e) {
+      var a = e.target && e.target.closest && e.target.closest('a.nav-link')
+      if (!a) return
+      var panel = navScrollEl()
+      if (panel && panel.contains(a)) saveNavScroll()
+    },
+    true
+  )
+
   siteNavTreeCurrent()
+  bindPanelScroll()
 
   function onSoftNavLoaded (fn) {
     if (window.SoftNav && typeof SoftNav.on === 'function') SoftNav.on('loaded', fn)
     else document.addEventListener('soft-nav:loaded', function (e) { fn(e.detail || {}) })
   }
-  onSoftNavLoaded(function () { siteNavTreeCurrent() })
+  function onSoftNavBefore (fn) {
+    if (window.SoftNav && typeof SoftNav.on === 'function') SoftNav.on('before', fn)
+    else document.addEventListener('soft-nav:before', function (e) { fn(e.detail || {}) })
+  }
+  onSoftNavBefore(function () {
+    saveNavScroll()
+  })
+  onSoftNavLoaded(function () {
+    siteNavTreeCurrent()
+    bindPanelScroll()
+    restoreNavScroll()
+  })
 })()
