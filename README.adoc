@@ -1,4 +1,4 @@
-= site-nav-tree
+﻿= site-nav-tree
 :description: Antora extension that folds curated components into the sidebar nav tree without replacing default nav-tree behavior.
 :page-audience: Antora hub maintainers with multiple components on one site
 :page-usage-context: Register under antora.extensions; optional Valentus companion partial
@@ -120,6 +120,6 @@ Suggested member of the Facto compose pack (Valentus stays lean — theme only).
 
 == Related
 
-* https://github.com/antora-supplemental/antora-facto[antora-facto]
+* https://github.com/antora-supplemental/facto-stack[facto-stack]
 * https://github.com/antora-supplemental/valentus-theme[valentus-theme]
 * DevCentr: Antora essential extensions (docs hub)

@@ -1,5 +1,8 @@
-= Changelog
+﻿= Changelog
 
+== 2026-09-25 -- Cite facto-stack
+
+* Related link: `antora-facto` renamed to https://github.com/antora-supplemental/facto-stack[facto-stack].
 == 0.4.1 - 2026-09-25
 
 * Companion `site-nav-tree-current.js`: persist/restore `.nav-panel-menu` scrollTop via `sessionStorage` (`site-nav-tree:scroll-y`) so SoftNav swaps and full navigations keep left-rail position independently of the content column.
