@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.5.2 - 2026-09-26
+
+* Promote linked **section** parents that have children into an unlinked section label + **Overview** child (same landing URL). Fixes Overview collapsing into Email/Software stack when parent and Overview shared one URL (Default UI first `is-current-page` / SoftNav `samePath`).
+* Recursive: capability categories and nested linked parents get the same treatment.
+
+
 == 0.5.1 - 2026-09-26
 
 * Flatten **multiple** anonymous Antora nav trees by concatenating their items (Tools multi-module nav no longer collapses to Overview-only empty wrappers).

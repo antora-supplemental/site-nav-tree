@@ -8,6 +8,7 @@ const {
   flattenNavTrees,
   unwrapStartPageDuplicate,
   unwrapOverviewParents,
+  promoteLinkedSectionLandings,
   ensureOverviewChild,
   hardSortHomeThenChangelog,
 } = require('../lib/build-site-navigation')
@@ -386,6 +387,58 @@ describe('buildSiteNavigation Tools multi-anonymous', () => {
     assert.deepEqual(
       tree[0].items.map((i) => i.content),
       ['Overview', 'Agent Rules', 'Toolchain Framework']
+    )
+  })
+})
+
+
+describe('promoteLinkedSectionLandings', () => {
+  it('promotes linked section parents to unlinked + Overview child', () => {
+    const items = [
+      {
+        content: 'Software stack',
+        url: '/bb/software-stack/',
+        urlType: 'internal',
+        items: [
+          {
+            content: 'Email',
+            url: '/bb/email/',
+            urlType: 'internal',
+            items: [{ content: 'Matrix', url: '/bb/explanation/email-decision-matrix/' }],
+          },
+          { content: 'Defaults by stage', url: '/bb/defaults-by-org-stage/' },
+        ],
+      },
+    ]
+    const out = promoteLinkedSectionLandings(items)
+    assert.equal(out[0].content, 'Software stack')
+    assert.equal(out[0].url, undefined)
+    assert.deepEqual(
+      out[0].items.map((i) => i.content),
+      ['Overview', 'Email', 'Defaults by stage']
+    )
+    assert.equal(out[0].items[0].url, '/bb/software-stack/')
+    assert.equal(out[0].items[1].url, undefined)
+    assert.equal(out[0].items[1].items[0].content, 'Overview')
+    assert.equal(out[0].items[1].items[0].url, '/bb/email/')
+  })
+
+  it('strips parent URL when Overview child already owns the landing', () => {
+    const items = [
+      {
+        content: 'Email',
+        url: '/bb/email/',
+        items: [
+          { content: 'Overview', url: '/bb/email/' },
+          { content: 'Matrix', url: '/bb/matrix/' },
+        ],
+      },
+    ]
+    const out = promoteLinkedSectionLandings(items)
+    assert.equal(out[0].url, undefined)
+    assert.deepEqual(
+      out[0].items.map((i) => i.content),
+      ['Overview', 'Matrix']
     )
   })
 })

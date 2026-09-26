@@ -142,7 +142,14 @@
    */
   function siteNavTreeCurrent () {
     var menu = document.querySelector('.nav-container [data-panel=menu]')
-    if (!menu) return
+    if (!menu) {
+      try {
+        document.documentElement.setAttribute('data-snt-nav-ready', '1')
+      } catch (e) {
+        /* ignore */
+      }
+      return
+    }
 
     var remembered = loadExpanded()
 
@@ -151,6 +158,11 @@
       applyExpanded(menu, remembered)
       persistMenu(menu)
       restoreNavScroll()
+      try {
+        document.documentElement.setAttribute('data-snt-nav-ready', '1')
+      } catch (e) {
+        /* ignore */
+      }
       return
     }
 
@@ -186,6 +198,11 @@
     applyExpanded(menu, remembered)
     persistMenu(menu)
     restoreNavScroll()
+    try {
+      document.documentElement.setAttribute('data-snt-nav-ready', '1')
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   function onToggleClick (e) {
@@ -250,6 +267,11 @@
   }
   onSoftNavBefore(function () {
     saveNavScroll()
+    try {
+      document.documentElement.removeAttribute('data-snt-nav-ready')
+    } catch (e) {
+      /* ignore */
+    }
   })
   onSoftNavLoaded(function () {
     siteNavTreeCurrent()
