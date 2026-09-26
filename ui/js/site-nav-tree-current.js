@@ -12,6 +12,9 @@
  *
  * Nav panel scrollTop is persisted separately so left-rail position survives
  * SoftNav swaps and full document loads independently of the content column.
+ *
+ * Does not blank the tree (no visibility:hidden / data-snt-nav-ready hide).
+ * Scroll saves are debounced; SoftNav before/unload flush immediately.
  */
 ;(function () {
   'use strict'
@@ -19,6 +22,7 @@
   // v2: pathname keys (stable across URL depth / SoftNav absolutize)
   var STORAGE_KEY = 'site-nav-tree:expanded-v2'
   var SCROLL_KEY = 'site-nav-tree:scroll-y'
+  var scrollSaveTimer = null
 
   function normalizeHref (href) {
     if (!href) return ''
@@ -105,7 +109,7 @@
     return document.querySelector('.nav-container [data-panel=menu]')
   }
 
-  function saveNavScroll () {
+  function saveNavScrollNow () {
     var el = navScrollEl()
     if (!el) return
     try {
@@ -113,6 +117,22 @@
     } catch (e) {
       /* ignore */
     }
+  }
+
+  function saveNavScroll () {
+    if (scrollSaveTimer != null) return
+    scrollSaveTimer = window.setTimeout(function () {
+      scrollSaveTimer = null
+      saveNavScrollNow()
+    }, 100)
+  }
+
+  function flushNavScroll () {
+    if (scrollSaveTimer != null) {
+      window.clearTimeout(scrollSaveTimer)
+      scrollSaveTimer = null
+    }
+    saveNavScrollNow()
   }
 
   function restoreNavScroll () {
@@ -128,7 +148,6 @@
     var y = parseInt(raw, 10)
     if (isNaN(y)) return
     el.scrollTop = y
-    // Layout / font metrics can settle a frame later after SoftNav swaps.
     requestAnimationFrame(function () {
       var again = navScrollEl()
       if (again) again.scrollTop = y
@@ -136,7 +155,7 @@
   }
 
   /**
-   * After SoftNav swaps the nav panel, restore remembered expansion *and*
+   * After SoftNav swaps (or marks current), restore remembered expansion *and*
    * the current-page path without collapsing non-current siblings the reader
    * left open under other (or the same) component roots.
    */
@@ -175,13 +194,9 @@
       if (el !== best) el.classList.remove('is-current-page')
     })
 
-    // Drop path markers from a prior page; keep remembered expansions via
-    // sessionStorage so SoftNav rebind does not look like inject/remove.
     menu.querySelectorAll('.nav-item.is-current-path').forEach(function (el) {
       el.classList.remove('is-current-path')
     })
-    // Clear is-active only along items that will be rebuilt from current path;
-    // remembered keys re-apply sibling / other-component expansion next.
     menu.querySelectorAll('.nav-item.is-active').forEach(function (el) {
       el.classList.remove('is-active')
     })
@@ -205,25 +220,50 @@
     }
   }
 
+  /**
+   * SoftNav keeps the live forest DOM (no panel wipe). Mark the deepest nav-link
+   * matching destPath as is-current-page, then expand via siteNavTreeCurrent.
+   */
+  function markCurrentByPath (pathname) {
+    var menu = document.querySelector('.nav-container [data-panel=menu]')
+    if (!menu) return
+    var want = normalizeHref(pathname)
+    if (!want) return
+    var matches = []
+    menu.querySelectorAll('a.nav-link').forEach(function (a) {
+      if (normalizeHref(a.getAttribute('href') || a.href) === want) {
+        var li = a.closest('li.nav-item')
+        if (li) matches.push(li)
+      }
+    })
+    if (!matches.length) return
+    matches.sort(function (a, b) {
+      return (parseInt(b.getAttribute('data-depth'), 10) || 0) - (parseInt(a.getAttribute('data-depth'), 10) || 0)
+    })
+    menu.querySelectorAll('.nav-item.is-current-page').forEach(function (el) {
+      el.classList.remove('is-current-page')
+    })
+    matches[0].classList.add('is-current-page')
+  }
+
   function onToggleClick (e) {
     var toggle = e.target && e.target.closest && e.target.closest('.nav-item-toggle')
     if (!toggle) return
     var menu = document.querySelector('.nav-container [data-panel=menu]')
     if (!menu || !menu.contains(toggle)) return
-    // Default UI toggles is-active synchronously on click; persist after that.
     setTimeout(function () {
       persistMenu(menu)
     }, 0)
   }
 
   window.siteNavTreeCurrent = siteNavTreeCurrent
-  window.siteNavTreeSaveScroll = saveNavScroll
+  window.siteNavTreeMarkCurrentByPath = markCurrentByPath
+  window.siteNavTreeSaveScroll = flushNavScroll
   window.siteNavTreeRestoreScroll = restoreNavScroll
 
   document.addEventListener('click', onToggleClick)
 
-  // Persist scroll while the reader moves the left rail; also right before unload
-  // so a full navigation (cross-component) keeps the position.
+  // Debounced persist while the reader moves the left rail only.
   document.addEventListener(
     'scroll',
     function (e) {
@@ -233,7 +273,6 @@
     },
     true
   )
-  // Some browsers only fire scroll on the element itself (not via capture from document).
   function bindPanelScroll () {
     var el = navScrollEl()
     if (!el || el.getAttribute('data-snt-scroll-bound')) return
@@ -241,15 +280,14 @@
     el.addEventListener('scroll', saveNavScroll, { passive: true })
   }
   bindPanelScroll()
-  window.addEventListener('beforeunload', saveNavScroll)
-  // Capture nav link clicks early so full navigations remember scroll.
+  window.addEventListener('beforeunload', flushNavScroll)
   document.addEventListener(
     'click',
     function (e) {
       var a = e.target && e.target.closest && e.target.closest('a.nav-link')
       if (!a) return
       var panel = navScrollEl()
-      if (panel && panel.contains(a)) saveNavScroll()
+      if (panel && panel.contains(a)) flushNavScroll()
     },
     true
   )
@@ -266,14 +304,16 @@
     else document.addEventListener('soft-nav:before', function (e) { fn(e.detail || {}) })
   }
   onSoftNavBefore(function () {
-    saveNavScroll()
-    try {
-      document.documentElement.removeAttribute('data-snt-nav-ready')
-    } catch (e) {
-      /* ignore */
-    }
+    flushNavScroll()
   })
-  onSoftNavLoaded(function () {
+  onSoftNavLoaded(function (detail) {
+    if (detail && detail.url && typeof markCurrentByPath === 'function') {
+      try {
+        markCurrentByPath(detail.url)
+      } catch (e) {
+        /* ignore */
+      }
+    }
     siteNavTreeCurrent()
     bindPanelScroll()
     restoreNavScroll()

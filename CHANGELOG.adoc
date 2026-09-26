@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.5.3 - 2026-09-26
+
+* SoftNav seamlessness: stop clearing `data-snt-nav-ready` on `before` (no tree blank/flash). Hub should drop any `visibility:hidden` paint-hold tied to that attribute.
+* Debounce nav-panel scroll persistence (100ms); flush on SoftNav before / unload / nav-link click.
+* `siteNavTreeMarkCurrentByPath(url)` so SoftNav can keep the live forest DOM and only retarget current markers (avoids full panel wipe).
+
 == 0.5.2 - 2026-09-26
 
 * Promote linked **section** parents that have children into an unlinked section label + **Overview** child (same landing URL). Fixes Overview collapsing into Email/Software stack when parent and Overview shared one URL (Default UI first `is-current-page` / SoftNav `samePath`).
@@ -27,20 +33,20 @@
 * Companion `site-nav-tree-current.js`: persist/restore `.nav-panel-menu` scrollTop via `sessionStorage` (`site-nav-tree:scroll-y`) so SoftNav swaps and full navigations keep left-rail position independently of the content column.
 == 0.4.0 - 2026-09-25
 
-* **Home then Changelog hard-sort:** after unwrap, keep a **Home** child (rename start-page duplicates instead of dropping them) and hard-sort each branch Home → Activity Log/Changelog → rest (recursive).
+* **Home then Changelog hard-sort:** after unwrap, keep a **Home** child (rename start-page duplicates instead of dropping them) and hard-sort each branch Home â†’ Activity Log/Changelog â†’ rest (recursive).
 * Component root URL prefers the Home child when present.
 * Companion `site-nav-tree-current.js`: expand keys use pathname-only (`site-nav-tree:expanded-v2`) so SoftNav depth / absolutize no longer looks like inject/remove; restore expansion on `SoftNav.loaded` without collapsing non-current siblings.
 * Regression: titled multi-origin platform trees stay as siblings under a Platforms hub root.
 
 == Unreleased
 
-* README: Valentus keeps the mast **component** picker with site-nav-tree (mobile jump); only the trail’s duplicate component-root crumb is suppressed. Version sits to the right of the component.
+* README: Valentus keeps the mast **component** picker with site-nav-tree (mobile jump); only the trailâ€™s duplicate component-root crumb is suppressed. Version sits to the right of the component.
 
-== 0.3.1 — 2026-09-09
+== 0.3.1 â€” 2026-09-09
 
-* README: recommend shipping nav-typology (+ companion UI; diataxis plugin when Diátaxis) whenever site-nav-tree is enabled.
+* README: recommend shipping nav-typology (+ companion UI; diataxis plugin when DiÃ¡taxis) whenever site-nav-tree is enabled.
 
-== 0.3.0 — 2026-09-09
+== 0.3.0 â€” 2026-09-09
 
 * Companion `ui/js/site-nav-tree-current.js`: retain nav expand/collapse across page changes via `sessionStorage` (`site-nav-tree:expanded-v1`). Current-path rewrite no longer collapses other opened component trees.
 * Persist expansion on `.nav-item-toggle` clicks.
@@ -49,24 +55,24 @@
 
 * README: document multi-nav concatenation vs `include::` nesting footgun with site-nav-tree.
 
-== 0.2.2 — 2026-08-30
+== 0.2.2 â€” 2026-08-30
 
-* Regression tests: multi-root Diátaxis sibling trees under one component stay visible after flatten/unwrap (several titled trees, or linked parents under one anonymous wrapper).
+* Regression tests: multi-root DiÃ¡taxis sibling trees under one component stay visible after flatten/unwrap (several titled trees, or linked parents under one anonymous wrapper).
 
-== 0.2.1 — 2026-08-30
+== 0.2.1 â€” 2026-08-30
 
 * Flatten Antora's anonymous single-tree wrapper when wrapping component roots (fixes empty expanded carets).
 * Unwrap a leading start-page nav item that duplicates the component root title/URL (no Business Bootstrap > Business Bootstrap).
 * Ship companion `ui/js/site-nav-tree-current.js` to prefer the deepest `is-current-page` when URLs collide across the forest.
 
-== 0.2.0 — 2026-08-30
+== 0.2.0 â€” 2026-08-30
 
 * Add `include` allowlist so multi-source hubs can curate the forest without listing every stub in `exclude`.
 * When `include` is set and `order` is empty, forest order follows `include`.
 * Publish `site.keys.site_nav_tree_include` / `_exclude` / `_order` for breadcrumb alignment.
-* Docs: registering a content source ≠ adding a sidebar root.
+* Docs: registering a content source â‰  adding a sidebar root.
 
-== 0.1.0 — 2026-08-30
+== 0.1.0 â€” 2026-08-30
 
 * Initial release: wrap `NavigationCatalog#getNavigation` into a site-wide component forest.
 * Keeps default Antora / Valentus `nav-tree` behavior (no UI wipe).
