@@ -7,6 +7,7 @@ const {
   orderComponents,
   flattenNavTrees,
   unwrapStartPageDuplicate,
+  unwrapOverviewParents,
   ensureOverviewChild,
   hardSortHomeThenChangelog,
 } = require('../lib/build-site-navigation')
@@ -74,12 +75,23 @@ describe('flattenNavTrees', () => {
     assert.deepEqual(flattenNavTrees([{ items }]), items)
   })
 
-  it('leaves multi-tree or titled trees alone', () => {
+  it('leaves titled multi-trees as siblings', () => {
     const trees = [
       { content: 'A', items: [] },
       { content: 'B', items: [] },
     ]
-    assert.equal(flattenNavTrees(trees), trees)
+    assert.deepEqual(flattenNavTrees(trees), trees)
+  })
+
+  it('concatenates multiple anonymous trees (Tools multi-module nav)', () => {
+    const trees = [
+      { items: [{ content: 'Agent Rules', url: '/tools/agent-rules/' }] },
+      { items: [{ content: 'Toolchain Framework', url: '/tools/toolchain-framework/' }] },
+    ]
+    assert.deepEqual(
+      flattenNavTrees(trees).map((i) => i.content),
+      ['Agent Rules', 'Toolchain Framework']
+    )
   })
 })
 
@@ -324,3 +336,57 @@ describe('buildSiteNavigation', () => {
     )
   })
 })
+
+
+describe('unwrapOverviewParents', () => {
+  it('promotes children of Overview parents to siblings', () => {
+    const items = [
+      {
+        content: 'devcentr.org',
+        items: [
+          {
+            content: 'Overview',
+            url: '/platforms/devcentr-org/',
+            items: [
+              { content: 'Site architecture', url: '/platforms/devcentr-org/explanation/site-architecture/' },
+              { content: 'Theme reveal', url: '/platforms/devcentr-org/explanation/theme-reveal/' },
+            ],
+          },
+          { content: 'Changelog', url: '/platforms/devcentr-org/changelog/' },
+        ],
+      },
+    ]
+    const out = unwrapOverviewParents(items)
+    assert.deepEqual(
+      out[0].items.map((i) => i.content),
+      ['Overview', 'Site architecture', 'Theme reveal', 'Changelog']
+    )
+    assert.equal(out[0].items[0].items, undefined)
+  })
+})
+
+describe('buildSiteNavigation Tools multi-anonymous', () => {
+  it('shows module nav leaves beside synthesized Overview', () => {
+    const tools = {
+      name: 'tools',
+      title: 'Tools',
+      latest: { version: '', url: '/tools/', title: 'Tools' },
+      versions: [{ version: '', url: '/tools/', title: 'Tools' }],
+    }
+    const nav = {
+      '@tools': [
+        { items: [{ content: 'Agent Rules', url: '/tools/agent-rules/' }] },
+        { items: [{ content: 'Toolchain Framework', url: '/tools/toolchain-framework/' }] },
+      ],
+    }
+    const getNav = (component, version) => nav[`${version}@${component}`]
+    const tree = buildSiteNavigation(mockCatalog([tools]), getNav, 'tools', '', {
+      include: ['tools'],
+    })
+    assert.deepEqual(
+      tree[0].items.map((i) => i.content),
+      ['Overview', 'Agent Rules', 'Toolchain Framework']
+    )
+  })
+})
+

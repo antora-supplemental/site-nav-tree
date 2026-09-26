@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.5.1 - 2026-09-26
+
+* Flatten **multiple** anonymous Antora nav trees by concatenating their items (Tools multi-module nav no longer collapses to Overview-only empty wrappers).
+* Recursively unwrap **Overview/Home** linked parents that nest sibling articles (Platforms `devcentr.org` Overview-wrap class of bug); Overview stays a peer leaf.
+
+
 == 0.5.0 - 2026-09-26
 
 * Prefer **Overview** over **Home** when unwrapping a start-page duplicate under a forest root (avoids colliding with a Home component).
