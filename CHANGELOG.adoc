@@ -1,4 +1,11 @@
-﻿= Changelog
+= Changelog
+
+== 0.5.0 - 2026-09-26
+
+* Prefer **Overview** over **Home** when unwrapping a start-page duplicate under a forest root (avoids colliding with a Home component).
+* Synthesize an **Overview** child when the component start URL is set but nav has no Home/Overview leaf (parity for General Knowledge, Platforms, Tools, Templates).
+* `isHomeNavItem` still treats both labels as the landing slot for hard-sort / root URL preference.
+
 
 == 2026-09-25 -- Cite facto-stack
 

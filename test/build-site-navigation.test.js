@@ -7,6 +7,7 @@ const {
   orderComponents,
   flattenNavTrees,
   unwrapStartPageDuplicate,
+  ensureOverviewChild,
   hardSortHomeThenChangelog,
 } = require('../lib/build-site-navigation')
 
@@ -83,7 +84,7 @@ describe('flattenNavTrees', () => {
 })
 
 describe('unwrapStartPageDuplicate', () => {
-  it('renames a leaf start-page link to Home instead of dropping it', () => {
+  it('renames a leaf start-page link to Overview instead of dropping it', () => {
     const items = [
       { content: 'Business Bootstrap', url: '/business-bootstrap/' },
       { content: 'Email', url: '/business-bootstrap/email/' },
@@ -91,7 +92,7 @@ describe('unwrapStartPageDuplicate', () => {
     const out = unwrapStartPageDuplicate(items, '/business-bootstrap/', 'Business Bootstrap')
     assert.deepEqual(
       out.map((i) => i.content),
-      ['Home', 'Email']
+      ['Overview', 'Email']
     )
     assert.equal(out[0].url, '/business-bootstrap/')
   })
@@ -104,11 +105,11 @@ describe('unwrapStartPageDuplicate', () => {
     const out = unwrapStartPageDuplicate(items, '/business-bootstrap/', 'Business Bootstrap')
     assert.deepEqual(
       out.map((i) => i.content),
-      ['Home', 'Email']
+      ['Overview', 'Email']
     )
   })
 
-  it('promotes linked start-page parent children and prepends Home', () => {
+  it('promotes linked start-page parent children and prepends Overview', () => {
     const items = [
       {
         content: 'Overview',
@@ -120,7 +121,7 @@ describe('unwrapStartPageDuplicate', () => {
     const out = unwrapStartPageDuplicate(items, '/platforms/', 'Platforms')
     assert.deepEqual(
       out.map((i) => i.content),
-      ['Home', 'Child', 'Other']
+      ['Overview', 'Child', 'Other']
     )
   })
 })
@@ -171,7 +172,7 @@ describe('hardSortHomeThenChangelog', () => {
 })
 
 describe('buildSiteNavigation', () => {
-  it('flattens anonymous tree, renames start-page duplicate to Home, hard-sorts', () => {
+  it('flattens anonymous tree, renames start-page duplicate to Overview, hard-sorts', () => {
     const bb = {
       name: 'business-bootstrap',
       title: 'Business Bootstrap',
@@ -199,7 +200,7 @@ describe('buildSiteNavigation', () => {
     assert.equal(tree[0].url, '/business-bootstrap/')
     assert.deepEqual(
       tree[0].items.map((i) => i.content),
-      ['Home', 'Changelog', 'Email']
+      ['Overview', 'Changelog', 'Email']
     )
   })
 
@@ -232,7 +233,7 @@ describe('buildSiteNavigation', () => {
     assert.equal(tree.length, 1)
     assert.deepEqual(
       tree[0].items.map((i) => i.content),
-      ['Tutorials', 'How-to Guides', 'Reference', 'Explanation']
+      ['Overview', 'Tutorials', 'How-to Guides', 'Reference', 'Explanation']
     )
   })
 
@@ -263,7 +264,7 @@ describe('buildSiteNavigation', () => {
 
     assert.deepEqual(
       tree[0].items.map((i) => i.content),
-      ['Changelog', 'Tutorials', 'How-to Guides', 'Reference', 'Explanation']
+      ['Overview', 'Changelog', 'Tutorials', 'How-to Guides', 'Reference', 'Explanation']
     )
   })
 
@@ -303,11 +304,23 @@ describe('buildSiteNavigation', () => {
     assert.equal(tree[0].url, '/platforms/')
     assert.deepEqual(
       tree[0].items.map((i) => i.content),
-      ['DevCentr', 'devcentr.org']
+      ['Overview', 'DevCentr', 'devcentr.org']
     )
+    assert.equal(tree[0].items[0].url, '/platforms/')
     assert.deepEqual(
-      tree[0].items[0].items.map((i) => i.content),
+      tree[0].items[1].items.map((i) => i.content),
       ['Home', 'Changelog', 'Capabilities']
+    )
+  })
+
+  it('ensureOverviewChild is a no-op when Overview already present', () => {
+    const items = [
+      { content: 'Overview', url: '/bb/' },
+      { content: 'Email', url: '/bb/email/' },
+    ]
+    assert.deepEqual(
+      ensureOverviewChild(items, '/bb/').map((i) => i.content),
+      ['Overview', 'Email']
     )
   })
 })

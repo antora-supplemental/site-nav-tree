@@ -1,4 +1,4 @@
-﻿= site-nav-tree
+= site-nav-tree
 :description: Antora extension that folds curated components into the sidebar nav tree without replacing default nav-tree behavior.
 :page-audience: Antora hub maintainers with multiple components on one site
 :page-usage-context: Register under antora.extensions; optional Valentus companion partial
@@ -74,7 +74,7 @@ Also copy `ui/js/site-nav-tree-current.js` into hub `supplemental-ui/js/` and lo
 
 When Valentus is active with `site.keys.site_nav_tree=true`, the theme **keeps** the mast component picker (mobile jump target + context) and places version to its right; it only suppresses a **trail** crumb that duplicates the component root so the sidebar forest and mast do not both spell the same name in the path. Hubs should not need a one-off breadcrumb override for that.
 
-Do **not** put the component start page as the first `nav.adoc` item when site-nav-tree already provides the component root (`* xref:index.adoc[Business Bootstrap]` under a Business Bootstrap root → BB > BB). Linked parents are for **section** landings inside a component (`Email`, `Org infra`), not for repeating the component title.
+Prefer an explicit `* xref:index.adoc[Overview]` child for the component start page (site-nav-tree also rewrites a leading start-page duplicate labeled with the component title to **Overview**, and synthesizes Overview when missing). Do **not** repeat the component title as the first nav item (`* xref:index.adoc[Business Bootstrap]` under a Business Bootstrap root). Prefer **Overview** over **Home** so the label does not collide with a Home forest root. Linked parents are for **section** landings inside a component (`Email`, `Org infra`), not for repeating the component title.
 
 == Recommended pairing: nav-typology
 
