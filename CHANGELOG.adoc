@@ -1,12 +1,16 @@
 = Changelog
 
-== Unreleased
+== 0.5.7 - 2026-10-17
+
+=== Fixed
+
+* `ensureOverviewChild` skips synthesizing a top-level Overview only when an unlinked nav section already exposes the component start page (demo-data **Core** > Overview), not when nested Overview leaves belong to Diátaxis section landings.
+
+== 0.5.6 - 2026-10-16
 
 === Added
 
 * README *Demo data supplement* — points at `demo-data` `docs/fixtures/site-nav-tree` and playbook wiring.
-
-== 0.5.6 - 2026-10-16
 
 * Nav label filter sticky wrapper uses `background: transparent` (v0.5.5 still painted side-panel / panel fallbacks on the bar).
 

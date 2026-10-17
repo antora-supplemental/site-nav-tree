@@ -336,6 +336,20 @@ describe('buildSiteNavigation', () => {
       ['Overview', 'Email']
     )
   })
+
+  it('ensureOverviewChild is a no-op when Overview is nested under a section', () => {
+    const items = [
+      {
+        content: 'Core',
+        items: [{ content: 'Overview', url: '/demo-pages/' }, { content: 'Typography', url: '/demo-pages/typography/' }],
+      },
+      { content: 'Extensions', items: [{ content: 'Tabs', url: '/demo-pages/extensions/tabs/' }] },
+    ]
+    assert.deepEqual(
+      ensureOverviewChild(items, '/demo-pages/').map((i) => i.content),
+      ['Core', 'Extensions']
+    )
+  })
 })
 
 
