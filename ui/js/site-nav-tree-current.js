@@ -310,7 +310,8 @@
       return
     }
 
-    var best = pickBestCurrentPageItem(currents, currentPathname())
+    var wantPath = currentPathname()
+    var best = pickBestCurrentPageItem(currents, wantPath, menu)
     if (!best) best = currents[0]
 
     currents.forEach(function (el) {
@@ -334,6 +335,7 @@
     best.classList.add('is-active', 'is-current-page')
 
     applyExpanded(menu, remembered)
+    maybeExpandForestRootLanding(menu, wantPath)
     persistMenu(menu)
     restoreNavScroll()
     markOverviewLabels(menu)
@@ -351,6 +353,7 @@
   function markCurrentByPath (pathname) {
     var menu = document.querySelector('.nav-container [data-panel=menu]')
     if (!menu) return
+    prepareNavMenu(menu)
     var want = normalizeHref(pathname)
     if (!want) return
     var matches = []
@@ -361,7 +364,7 @@
       }
     })
     if (!matches.length) return
-    var best = pickBestCurrentPageItem(matches, want)
+    var best = pickBestCurrentPageItem(matches, want, menu)
     if (!best) best = matches[0]
     menu.querySelectorAll('.nav-item.is-current-page').forEach(function (el) {
       el.classList.remove('is-current-page')
@@ -417,17 +420,53 @@
     return parseInt(el && el.getAttribute('data-depth'), 10) || 0
   }
 
-  /** Forest depth-0 component root link for a nav item (Platforms, General Knowledge, …). */
-  function componentRootHref (li) {
-    if (!li || !li.closest) return ''
+  /** Forest depth-0 component root for a nav item (Platforms, General Knowledge, …). */
+  function forestOwnerRootOf (li) {
+    if (!li || !li.closest) return null
     var root = li
     while (root) {
-      if (root.classList && root.classList.contains('nav-item') && navDepth(root) === 0) break
+      if (root.classList && root.classList.contains('nav-item') && navDepth(root) === 0) return root
       root = root.parentElement ? root.parentElement.closest('li.nav-item') : null
     }
+    return null
+  }
+
+  function componentRootHref (li) {
+    var root = forestOwnerRootOf(li)
     if (!root) return ''
     var a = root.querySelector(':scope > .nav-link')
     return a ? normalizeHref(a.getAttribute('href') || a.href) : ''
+  }
+
+  function findForestOwnerRootForPath (menu, pathname) {
+    if (!menu || !pathname) return null
+    var want = normalizeHref(pathname)
+    var found = null
+    menu.querySelectorAll('li.nav-item[data-depth="0"]').forEach(function (li) {
+      if (pathUnderComponentRoot(want, componentRootHref(li))) found = li
+    })
+    return found
+  }
+
+  /** Open every top-level section under a forest component root (Diátaxis branches). */
+  function expandForestRootSections (rootLi) {
+    if (!rootLi || navDepth(rootLi) !== 0) return
+    rootLi.classList.add('is-active')
+    var list = directChild(rootLi, 'UL', 'nav-list')
+    if (!list) return
+    var kids = list.children || []
+    for (var i = 0; i < kids.length; i++) {
+      var item = kids[i]
+      if (item.tagName === 'LI' && item.classList.contains('nav-item')) item.classList.add('is-active')
+    }
+  }
+
+  function maybeExpandForestRootLanding (menu, pathname) {
+    if (!menu || !pathname) return
+    var owner = findForestOwnerRootForPath(menu, pathname)
+    if (!owner) return
+    if (normalizeHref(pathname) !== componentRootHref(owner)) return
+    expandForestRootSections(owner)
   }
 
   /** True when pathname is the component landing or a page under that root. */
@@ -443,16 +482,28 @@
    * Among nav items marked current for one URL, prefer matches under the forest
    * component root that owns the pathname, then the deepest within that subtree.
    */
-  function pickBestCurrentPageItem (items, pathname) {
+  function pickBestCurrentPageItem (items, pathname, menu) {
     if (!items || !items.length) return null
     var want = normalizeHref(pathname || currentPathname())
-    var owned = want
+    menu =
+      menu ||
+      (items[0] && items[0].closest && items[0].closest('.nav-container [data-panel=menu]')) ||
+      document.querySelector('.nav-container [data-panel=menu]')
+    var ownerRoot = menu && want ? findForestOwnerRootForPath(menu, want) : null
+    var owned = ownerRoot
       ? items.filter(function (li) {
-        return pathUnderComponentRoot(want, componentRootHref(li))
+        return forestOwnerRootOf(li) === ownerRoot
       })
-      : []
+      : want
+        ? items.filter(function (li) {
+          return pathUnderComponentRoot(want, componentRootHref(li))
+        })
+        : []
     var pool = owned.length ? owned : items
+    var ownerHref = ownerRoot ? componentRootHref(ownerRoot) : ''
+    var onLanding = !!(ownerHref && want === ownerHref)
     pool = pool.slice().sort(function (a, b) {
+      if (onLanding) return navDepth(a) - navDepth(b)
       return navDepth(b) - navDepth(a)
     })
     return pool[0]
@@ -519,7 +570,7 @@
     if (!overview) return
 
     li.classList.add('is-active')
-    persistMenu(menu)
+    if (navDepth(li) === 0) expandForestRootSections(li)
 
     var overviewPath = normalizeHref(overview.getAttribute('href') || overview.href)
     var onOverviewPage = overviewPath && overviewPath === currentPathname()
@@ -527,6 +578,7 @@
     if (link) {
       if (link === overview || normalizeHref(link.getAttribute('href')) === overviewPath) {
         if (onOverviewPage) e.preventDefault()
+        persistMenu(menu)
         return
       }
       e.preventDefault()
@@ -556,6 +608,8 @@
   window.siteNavTreeOverviewLink = overviewLinkFor
   window.siteNavTreePickBestCurrentPageItem = pickBestCurrentPageItem
   window.siteNavTreeComponentRootHref = componentRootHref
+  window.siteNavTreeExpandForestRootSections = expandForestRootSections
+  window.siteNavTreeFindForestOwnerRootForPath = findForestOwnerRootForPath
   window.siteNavTreeMarkOverviewLabels = markOverviewLabels
   window.siteNavTreeAbsolutizeNavHrefs = absolutizeNavLinkHrefs
   window.siteNavTreePrepareNavMenu = prepareNavMenu

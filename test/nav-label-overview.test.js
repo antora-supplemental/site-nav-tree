@@ -286,8 +286,9 @@ test('pickBestCurrentPageItem prefers owning component over cross-component xref
   const { win } = load(menu, { pathname: '/general-knowledge/' })
   const candidates = [platforms, devcentr, gkXref, gkRoot, gkOverview]
   candidates.forEach((li) => li.classList.add('is-current-page'))
-  const best = win.siteNavTreePickBestCurrentPageItem(candidates, '/general-knowledge/')
-  assert.equal(best, gkOverview, 'deepest match under the General Knowledge forest root')
+  const best = win.siteNavTreePickBestCurrentPageItem(candidates, '/general-knowledge/', menu)
+  assert.notEqual(best, gkXref)
+  assert.ok(best === gkRoot || best === gkOverview, 'owned GK landing match, not Platforms xref')
   assert.equal(win.siteNavTreeComponentRootHref(gkXref), '/platforms/')
   assert.equal(win.siteNavTreeComponentRootHref(gkOverview), '/general-knowledge/')
 })
@@ -309,9 +310,26 @@ test('siteNavTreeCurrent rewrites duplicate current markers to owning component'
   ;[gkRoot, gkOverview, gkXref].forEach((li) => li.classList.add('is-current-page'))
   win.siteNavTreeCurrent()
   assert.equal(gkXref.classList.contains('is-current-page'), false)
-  assert.equal(gkOverview.classList.contains('is-current-page'), true)
+  assert.ok(gkRoot.classList.contains('is-current-page') || gkOverview.classList.contains('is-current-page'))
   assert.equal(gkRoot.classList.contains('is-current-path'), true)
   assert.equal(platforms.classList.contains('is-current-path'), false)
+})
+
+test('expandForestRootSections opens all depth-1 branches under a forest root', () => {
+  const secA = item({ label: 'Explanation', href: '/general-knowledge/explanation/', depth: 1 })
+  const secB = item({ label: 'Tutorial', href: '/general-knowledge/tutorial/', depth: 1 })
+  const gkRoot = item({
+    label: 'General Knowledge',
+    href: '/general-knowledge/',
+    depth: 0,
+    kids: [item({ label: 'Overview', href: '/general-knowledge/', depth: 1 }), secA, secB],
+  })
+  const menu = new El('DIV')
+  menu.append(new El('UL', { cls: ['nav-list'] }).append(gkRoot))
+  const { win } = load(menu, { pathname: '/general-knowledge/' })
+  win.siteNavTreeExpandForestRootSections(gkRoot)
+  assert.ok(secA.classList.contains('is-active'))
+  assert.ok(secB.classList.contains('is-active'))
 })
 
 test('nodes without Overview, toggles, and modified clicks keep stock behavior', () => {

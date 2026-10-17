@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.6.6 - 2026-10-17
+
+=== Fixed
+
+* **Cross-forest current-page + partial forest expand.** `pickBestCurrentPageItem` resolves the owning depth-0 forest root from the live menu DOM (not only href prefix on each candidate), prefers shallowest match on component landing URLs, and `markCurrentByPath` absolutizes hrefs before matching. Component landing pages expand every depth-1 section under the forest root after path restore (and on depth-0 label click) so GK Diátaxis branches are not a stale `expanded-v2` subset.
+
 == 0.6.5 - 2026-10-17
 
 === Fixed
