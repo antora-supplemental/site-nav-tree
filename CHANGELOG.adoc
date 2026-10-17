@@ -1,5 +1,11 @@
 = Changelog
 
+== Unreleased
+
+=== Added
+
+* README *Demo data supplement* — points at `demo-data` `docs/fixtures/site-nav-tree` and playbook wiring.
+
 == 0.5.6 - 2026-10-16
 
 * Nav label filter sticky wrapper uses `background: transparent` (v0.5.5 still painted side-panel / panel fallbacks on the bar).

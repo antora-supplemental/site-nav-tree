@@ -134,6 +134,28 @@ Hub reference diagram: DevCentr docs hub `nav-typology.svg` and xref:publishing/
 
 Suggested member of the Facto compose pack (Valentus stays lean — theme only). Enable explicitly in the playbook until Facto's fragment lists it by default. Always set `include` (or a deliberate `exclude`) — do not ship the all-components default on a fat hub.
 
+== Demo data supplement
+
+Shared multi-root forest fixtures live in link:https://github.com/antora-supplemental/demo-data[`demo-data`^] at `docs/fixtures/site-nav-tree/` (`catalog-alpha`, `catalog-beta`).
+
+* Do **not** copy baseline AsciiDoc from `docs/theme-demo` into this extension repo.
+* Keep extension-local `examples/docs` minimal for CI; promote pages here when `facto-stack` and another demo both need the same forest.
+
+[source,yaml]
+----
+content:
+  sources:
+    - url: https://github.com/antora-supplemental/demo-data.git
+      branches: main
+      start_path: docs/fixtures/site-nav-tree
+antora:
+  extensions:
+    - require: '@antora-supplemental/site-nav-tree'
+      include: [catalog-alpha, catalog-beta]
+----
+
+Detail: link:https://github.com/antora-supplemental/demo-data/blob/main/docs/fixtures/site-nav-tree/README.adoc[fixture README in demo-data^].
+
 == Related
 
 * https://github.com/antora-supplemental/facto-stack[facto-stack]
