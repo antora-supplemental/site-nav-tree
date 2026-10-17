@@ -2,6 +2,7 @@
 
 == 0.5.4 - 2026-10-16
 
+* README: **Hub component naming** — `home` aggregator, Overview nav, `/docs/docs/` avoidance; link Dev-Centr `publishing/hub-home-component` and skill `hub-home-overview`.
 * Optional left-nav **text filter**: `filter: true`, `filter: { enabled: true }`, or aliases `navFilter` / `navTreeFilter`. Injects filter field, CSS/JS; sets `site.keys.site_nav_tree_filter`. Debounced label match; re-bind on SoftNav when the nav panel is not swapped.
 * `uiLoaded` injection when the filter is on or when `injectUi` / `ui` is `true` (`nav-menu.hbs`, `site-nav-tree-current.js`; filter assets when enabled). Appends to `footer-scripts` or hub `footer-content` / `head-meta`.
 

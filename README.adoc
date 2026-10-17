@@ -77,6 +77,15 @@ When Valentus is active with `site.keys.site_nav_tree=true`, the theme **keeps**
 
 Prefer an explicit `* xref:index.adoc[Overview]` child for the component start page (site-nav-tree also rewrites a leading start-page duplicate labeled with the component title to **Overview**, and synthesizes Overview when missing). Do **not** repeat the component title as the first nav item (`* xref:index.adoc[Business Bootstrap]` under a Business Bootstrap root). Prefer **Overview** over **Home** so the label does not collide with a Home forest root. Linked parents that have children are rewritten to an unlinked section label plus an **Overview** child for the landing URL (so Overview stays selectable). Prefer authoring that shape in `nav.adoc`; the rewrite covers legacy linked-parent forests. Do **not** repeat the component title as a linked parent.
 
+[#hub-home-component-naming]
+== Hub component naming (org aggregators)
+
+Multi-repo org hubs (Dev-Centr, D Lang Supplemental) use a dedicated Antora component **`home`** / title **Home**, playbook `site.start_page: home::index.adoc`, and a hub `nav.adoc` whose first item is **Overview** (portal-branded H1 on `index.adoc` with `:navtitle: Overview`). Put `home` first in site-nav-tree `include` / `order`.
+
+Do **not** name that aggregator component `docs` when the site already publishes under a `/docs` base — public URLs should use `/home/`, not `/docs/docs/`. Playbook `start_path: docs` only selects the `docs/` folder inside each git source.
+
+Full convention: link:https://docs.devcentr.org/home/publishing/hub-home-component.html[Dev-Centr — Hub home component^] · agent skill `hub-home-overview` (`dev-centr/agent-rules`).
+
 == Recommended pairing: nav-typology
 
 You *can* use `@antora-supplemental/nav-typology` without this extension.
