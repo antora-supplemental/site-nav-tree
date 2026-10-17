@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.6.5 - 2026-10-17
+
+=== Fixed
+
+* **Stale companion JS on CDN.** Script injection now appends `?v=<package version>` to `site-nav-tree-current.js` so edge caches (Cloudflare `max-age=14400` on docs hubs) pick up fixes without waiting for TTL. `injectSiteNavTreeUi` skips injecting a second script tag when the hub footer already references the companion (avoids duplicate loads).
+
 == 0.6.4 - 2026-10-17
 
 === Fixed
