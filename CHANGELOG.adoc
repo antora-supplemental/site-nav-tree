@@ -1,5 +1,12 @@
 = Changelog
 
+== 0.6.1 - 2026-10-17
+
+=== Fixed
+
+* Overview-landing **unlinked** section labels (Core, Extensions) get Valentus nav-tree hover/focus chrome via `.snt-overview-label` and companion CSS (`site-nav-tree-overview-label.css`), matching linked component roots (`.nav-link`) without reintroducing duplicate-URL `is-current-page` collisions from v0.5.2.
+* Parent-label navigation uses `SoftNav.navigate` when available instead of synthetic `overview.click()`, and suppresses redundant hard reloads when the reader is already on the Overview URL (component root click while SoftNav `samePath` leaves the anchor default action live).
+
 == 0.6.0 - 2026-10-17
 
 === Added

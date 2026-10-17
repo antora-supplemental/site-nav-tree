@@ -108,14 +108,20 @@ function item ({ label, href, kids = [] }) {
   return li
 }
 
-function load (menu) {
+function load (menu, { softNav = null, pathname = '/docs/a/' } = {}) {
   const listeners = []
   const store = {}
+  const navigated = []
   const win = {
-    location: { href: 'http://x/docs/a/', pathname: '/docs/a/' },
+    location: { href: 'http://x' + pathname, pathname },
     addEventListener () {},
     setTimeout,
     clearTimeout,
+    SoftNav: softNav || {
+      navigate (url) {
+        navigated.push(url)
+      },
+    },
   }
   const doc = {
     querySelector: (sel) => (sel === '.nav-container [data-panel=menu]' ? menu : null),
@@ -124,6 +130,7 @@ function load (menu) {
   }
   const ctx = {
     window: win,
+    SoftNav: win.SoftNav,
     document: doc,
     sessionStorage: {
       getItem: (k) => (k in store ? store[k] : null),
@@ -135,7 +142,7 @@ function load (menu) {
   }
   win.document = doc
   vm.runInNewContext(SRC, ctx)
-  return { win, listeners, store }
+  return { win, listeners, store, navigated }
 }
 
 function event (target, extra = {}) {
@@ -151,12 +158,12 @@ function event (target, extra = {}) {
   }
 }
 
-function setup (rootItem) {
+function setup (rootItem, opts = {}) {
   const menu = new El('DIV')
   menu.append(new El('UL', { cls: ['nav-list'] }).append(rootItem))
-  const { win, listeners, store } = load(menu)
+  const { win, listeners, store, navigated } = load(menu, opts)
   const label = listeners.find((l) => l.type === 'click' && l.capture)
-  return { menu, win, store, onLabelClick: label && label.fn }
+  return { menu, win, store, navigated, onLabelClick: label && label.fn }
 }
 
 test('overviewLinkFor finds Overview/Home child link only', () => {
@@ -169,14 +176,16 @@ test('overviewLinkFor finds Overview/Home child link only', () => {
   assert.equal(win.siteNavTreeOverviewLink(noOv), null)
 })
 
-test('unlinked section label expands and activates Overview anchor', () => {
+test('unlinked section label expands and opens Overview via SoftNav', () => {
   const ov = item({ label: 'Overview', href: '/docs/a/' })
   const core = item({ label: 'Core', kids: [ov] })
-  const { onLabelClick, store } = setup(core)
+  const { onLabelClick, store, navigated } = setup(core, { pathname: '/docs/other/' })
   const e = event(core.children[1])
   onLabelClick(e)
   assert.ok(core.classList.contains('is-active'))
-  assert.equal(ov.children[0].clicks, 1)
+  assert.ok(core.classList.contains('snt-overview-label'))
+  assert.equal(ov.children[0].clicks, 0)
+  assert.equal(navigated.length, 1)
   assert.ok(e.stopped, 'stock toggle suppressed so label never collapses')
   assert.ok(store['site-nav-tree:expanded-v2'])
 })
@@ -184,7 +193,7 @@ test('unlinked section label expands and activates Overview anchor', () => {
 test('linked component root expands and lets its own link navigate', () => {
   const ov = item({ label: 'Overview', href: '/docs/a/' })
   const root = item({ label: 'Demo pages', href: '/docs/a/', kids: [ov] })
-  const { onLabelClick } = setup(root)
+  const { onLabelClick } = setup(root, { pathname: '/docs/other/' })
   const e = event(root.children[1].children[0])
   onLabelClick(e)
   assert.ok(root.classList.contains('is-active'))
@@ -195,11 +204,24 @@ test('linked component root expands and lets its own link navigate', () => {
 test('linked parent whose URL differs from Overview redirects to Overview', () => {
   const ov = item({ label: 'Overview', href: '/docs/a/' })
   const root = item({ label: 'Tools', href: '/docs/a/other.html', kids: [ov] })
-  const { onLabelClick } = setup(root)
+  const { onLabelClick, navigated } = setup(root, { pathname: '/docs/a/other.html' })
   const e = event(root.children[1].children[0])
   onLabelClick(e)
   assert.ok(e.prevented)
-  assert.equal(ov.children[0].clicks, 1)
+  assert.equal(ov.children[0].clicks, 0)
+  assert.equal(navigated.length, 1)
+})
+
+test('linked root on Overview page expands without redundant navigation', () => {
+  const ov = item({ label: 'Overview', href: '/docs/a/' })
+  const root = item({ label: 'Demo pages', href: '/docs/a/', kids: [ov] })
+  const { onLabelClick, navigated } = setup(root)
+  const e = event(root.children[1].children[0])
+  onLabelClick(e)
+  assert.ok(root.classList.contains('is-active'))
+  assert.ok(e.prevented)
+  assert.equal(navigated.length, 0)
+  assert.equal(ov.children[0].clicks, 0)
 })
 
 test('nodes without Overview, toggles, and modified clicks keep stock behavior', () => {

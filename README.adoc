@@ -71,7 +71,7 @@ Valentus prints the current component title above the tree. With site-wide roots
 
 Align the breadcrumb component picker with the same curation (read `site.keys.site_nav_tree_*` via a small helper, or hard-match the playbook `include` list).
 
-**Parent label opens Overview.** When a nav node has a direct **Overview** (or **Home**) child link, clicking the node's *label* expands it and loads that Overview (same as clicking the Overview child). This covers forest roots (Demo pages, Tools, Platforms) and unlinked section labels (Core, Extensions); the caret button still collapses. Nodes without an Overview child keep stock behavior. Because the extension always emits an Overview leaf under each root and promoted section, no extra authoring is needed.
+**Parent label opens Overview.** When a nav node has a direct **Overview** (or **Home**) child link, clicking the node's *label* expands it and loads that Overview (same as clicking the Overview child). This covers forest roots (Demo pages, Tools, Platforms) and unlinked section labels (Core, Extensions); the caret button still collapses. Unlinked labels get the same nav-tree hover chrome as linked roots (`.snt-overview-label` + injected CSS). Navigation prefers `SoftNav.navigate` when the hub ships soft-nav. Nodes without an Overview child keep stock behavior. Because the extension always emits an Overview leaf under each root and promoted section, no extra authoring is needed.
 
 `site-nav-tree-current.js` loads after `site.js` so expand state prefers the deepest `is-current-page` when URLs collide and open trees restore from `sessionStorage` after navigation.
 
