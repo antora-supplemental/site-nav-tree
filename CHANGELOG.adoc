@@ -1,5 +1,9 @@
 = Changelog
 
+== 0.5.5 - 2026-10-16
+
+* Nav label filter CSS inherits Valentus / hub tokens (`--adt-font`, `--adt-elevated`, `--adt-border`, `--adt-ink`, `--adt-accent`, `--adt-nav-bg`, `--adt-side-panel-bg`, `--adt-mast-pad-h`) with Default UI fallbacks; sticky bar matches nav chrome; input focus ring aligns with navbar search (accent + soft glow). `color-scheme: inherit`; tames native `type=search` chrome.
+
 == 0.5.4 - 2026-10-16
 
 * README: **Hub component naming** — `home` aggregator, Overview nav, `/docs/docs/` avoidance; link Dev-Centr `publishing/hub-home-component` and skill `hub-home-overview`.

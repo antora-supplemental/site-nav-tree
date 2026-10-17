@@ -1,13 +1,13 @@
+/* Left-nav label filter — inherit Valentus (--adt-*) or Default UI panel/body tokens. */
+
 .nav-panel-menu[data-panel='menu'] .nav-tree-filter {
-  padding: 0.65rem 0.75rem 0.35rem;
   position: sticky;
   top: 0;
   z-index: 1;
-  background: var(--panel-background, var(--body-background, #fff));
-}
-
-html.dark-theme .nav-panel-menu[data-panel='menu'] .nav-tree-filter {
-  background: var(--panel-background, var(--body-background, #1e1e1e));
+  box-sizing: border-box;
+  padding: 0.45rem var(--adt-mast-pad-h, 0.75rem) 0.3rem;
+  background: var(--adt-side-panel-bg, var(--adt-nav-bg, var(--panel-background, transparent)));
+  color: inherit;
 }
 
 .nav-tree-filter-input {
@@ -15,28 +15,39 @@ html.dark-theme .nav-panel-menu[data-panel='menu'] .nav-tree-filter {
   width: 100%;
   margin: 0;
   padding: 0.4rem 0.55rem;
+  color-scheme: inherit;
   font: inherit;
+  font-family: var(--adt-font, var(--body-font-family, inherit));
   font-size: 0.875rem;
   line-height: 1.35;
-  border: 1px solid var(--panel-border-color, var(--color-gray-50, #ccc));
-  border-radius: 0.25rem;
-  background: var(--body-background, #fff);
-  color: var(--body-font-color, inherit);
+  border: 1px solid var(--adt-border, var(--panel-border-color, var(--color-gray-50, currentColor)));
+  border-radius: var(--adt-radius, var(--adt-radius-sm, 0.25rem));
+  background: var(--adt-elevated, var(--body-background, inherit));
+  color: var(--adt-ink, var(--body-font-color, inherit));
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-html.dark-theme .nav-tree-filter-input {
-  background: var(--body-background, #2a2a2a);
-  border-color: var(--panel-border-color, #555);
-}
-
-.nav-tree-filter-input:focus {
-  outline: 2px solid var(--link-font-color, #1565c0);
-  outline-offset: 1px;
+.nav-tree-filter-input::-webkit-search-decoration,
+.nav-tree-filter-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
 }
 
 .nav-tree-filter-input::placeholder {
-  color: var(--body-font-color-alt, var(--color-gray-70, #888));
+  color: var(--adt-ink-muted, var(--body-font-color-alt, var(--color-gray-70, inherit)));
   opacity: 0.85;
+}
+
+.nav-tree-filter-input:hover {
+  background: var(--adt-elevated, var(--body-background, inherit));
+}
+
+.nav-tree-filter-input:focus {
+  outline: none;
+  border-color: var(--adt-accent, var(--link-font-color, currentColor));
+  box-shadow: 0 0 0 3px var(--adt-accent-soft, color-mix(in srgb, currentColor 12%, transparent));
 }
 
 nav.nav-menu li.nav-item.nav-tree-filter-hidden {
