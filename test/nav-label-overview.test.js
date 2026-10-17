@@ -224,6 +224,18 @@ test('linked root on Overview page expands without redundant navigation', () => 
   assert.equal(ov.children[0].clicks, 0)
 })
 
+test('absolutizeNavLinkHrefs freezes nav targets to site pathnames', () => {
+  const ov = item({ label: 'Overview', href: 'internet-architecture/' })
+  const rel = item({ label: 'Internet Reliability', href: 'internet-architecture/reliability/' })
+  const core = item({ label: 'Explanation', kids: [ov, rel] })
+  const menu = new El('DIV')
+  menu.append(new El('UL', { cls: ['nav-list'] }).append(core))
+  const { win } = load(menu, { pathname: '/general-knowledge/explanation/' })
+  win.siteNavTreeAbsolutizeNavHrefs(menu, 'https://docs.example/general-knowledge/explanation/')
+  assert.equal(ov.children[0].getAttribute('href'), '/general-knowledge/explanation/internet-architecture/')
+  assert.equal(rel.children[0].getAttribute('href'), '/general-knowledge/explanation/internet-architecture/reliability/')
+})
+
 test('nodes without Overview, toggles, and modified clicks keep stock behavior', () => {
   const sec = item({ label: 'Sec', kids: [item({ label: 'Page', href: '/docs/a/p.html' })] })
   const { onLabelClick } = setup(sec)

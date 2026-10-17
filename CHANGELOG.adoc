@@ -1,5 +1,12 @@
 = Changelog
 
+== 0.6.2 - 2026-10-17
+
+=== Fixed
+
+* **SoftNav stale relative nav hrefs.** Antora emits nav links relative to the page that built the tree; SoftNav keeps the live forest DOM, so same-component clicks after a swap resolved siblings against the wrong directory (Explanation → Internet Architecture Overview loops, nested **Internet Reliability** / **Languages** / **Architecture** leaves 404ing with doubled path segments). `site-nav-tree-current.js` now freezes each forest to site-root pathnames on first paint (`data-snt-hrefs-absolutized`); helpers `siteNavTreeAbsolutizeNavHrefs` / `siteNavTreePrepareNavMenu` for full nav-panel replace.
+* **404 sidebar empty.** Static Antora 404 pages ship without `page.navigation`; companion JS hydrates the nav panel from the site start page (`/home/` or the article’s start link) so the forest is usable on error pages.
+
 == 0.6.1 - 2026-10-17
 
 === Fixed
