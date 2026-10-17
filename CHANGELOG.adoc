@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.6.3 - 2026-10-17
+
+=== Fixed
+
+* **SoftNav intermittent nav 404s.** v0.6.2 froze hrefs once using `window.location` at first paint; rapid SoftNav clicks still resolved stale *relative* `href` attributes against the current article URL, and 404 hydration absolutized against the error page instead of the fetched start page. Nav base is now stored on the panel (`data-snt-nav-base`); `prepareNavMenu` re-normalizes any remaining relative links before each navigation; `siteNavTreeResolveNavLink` resolves click targets for SoftNav; duplicate helper definitions removed from the companion script.
+
 == 0.6.2 - 2026-10-17
 
 === Fixed

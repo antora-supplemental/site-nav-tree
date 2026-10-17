@@ -37,81 +37,36 @@
     }
   }
 
+  function isRelativeNavHref (raw) {
+    if (!raw || raw.charAt(0) === '#') return false
+    if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) return false
+    return raw.charAt(0) !== '/'
+  }
+
+  /** Page URL that produced the live forest (stable while SoftNav keeps the panel). */
+  function navMenuBaseHref (menu, explicitBase) {
+    if (explicitBase) {
+      if (menu) menu.setAttribute('data-snt-nav-base', explicitBase)
+      return explicitBase
+    }
+    if (!menu) return window.location.href
+    var stored = menu.getAttribute('data-snt-nav-base')
+    if (stored) return stored
+    var base = window.location.href
+    menu.setAttribute('data-snt-nav-base', base)
+    return base
+  }
+
   /**
    * Antora emits nav-link hrefs relative to the page that rendered the tree.
-   * SoftNav keeps the live forest DOM, so those hrefs must be frozen as
-   * site-root pathnames once (on first paint) or every same-component click
-   * after a swap resolves against the wrong directory (404 loops).
+   * SoftNav keeps the live forest DOM; freeze each link to a site-root pathname
+   * using that stored base (not the current article URL after a swap).
    */
   function absolutizeNavLinkHrefs (menu, baseHref) {
     if (!menu) return
     var base
     try {
-      base = new URL(baseHref || window.location.href)
-    } catch (e) {
-      return
-    }
-    menu.querySelectorAll('a.nav-link').forEach(function (a) {
-      var raw = a.getAttribute('href')
-      if (!raw || raw.charAt(0) === '#') return
-      if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) return
-      try {
-        var resolved = new URL(raw, base.href)
-        if (resolved.origin !== base.origin) return
-        a.setAttribute('href', normalizeHref(resolved.pathname))
-      } catch (e2) {
-        /* leave as-is */
-      }
-    })
-  }
-
-  function prepareNavMenu (menu) {
-    if (!menu) return
-    if (menu.getAttribute('data-snt-hrefs-absolutized') === '1') return
-    absolutizeNavLinkHrefs(menu, window.location.href)
-    menu.setAttribute('data-snt-hrefs-absolutized', '1')
-  }
-
-  function hydrate404Nav () {
-    if (!document.body || !document.body.classList.contains('status-404')) return
-    var panel = document.querySelector('.nav-container [data-panel=menu]')
-    if (!panel) return
-    if (panel.querySelector('li.nav-item')) return
-    var start = '/home/'
-    var startAnchor = document.querySelector('article.doc a[href^="/"]')
-    if (startAnchor) start = startAnchor.getAttribute('href') || start
-    fetch(start, { credentials: 'same-origin' })
-      .then(function (res) {
-        if (!res.ok) throw new Error('fetch')
-        return res.text()
-      })
-      .then(function (html) {
-        var doc = new DOMParser().parseFromString(html, 'text/html')
-        var fresh = doc.querySelector('.nav-container [data-panel=menu]')
-        if (!fresh) return
-        panel.innerHTML = fresh.innerHTML
-        panel.removeAttribute('data-snt-hrefs-absolutized')
-        prepareNavMenu(panel)
-        siteNavTreeCurrent()
-        bindPanelScroll()
-        restoreNavScroll()
-      })
-      .catch(function () {
-        /* static 404 without nav — no-op */
-      })
-  }
-
-  /**
-   * Antora emits page-relative nav hrefs. SoftNav keeps the live forest DOM, so
-   * those hrefs keep resolving against the *current* URL (Overview under Internet
-   * Architecture becomes ./ or ../ and loops to the wrong landing). Freeze each
-   * link to a site-root pathname once, using the page URL that produced the tree.
-   */
-  function absolutizeNavLinkHrefs (menu, baseHref) {
-    if (!menu) return
-    var base
-    try {
-      base = new URL(baseHref || window.location.href)
+      base = new URL(navMenuBaseHref(menu, baseHref))
     } catch (e) {
       return
     }
@@ -128,16 +83,38 @@
         if (resolved.origin !== base.origin) return
         a.setAttribute('href', normalizeHref(resolved.pathname))
       } catch (e2) {
-        /* ignore */
+        /* leave as-is */
       }
     })
   }
 
-  function prepareNavMenu (menu) {
+  function menuHasRelativeNavHrefs (menu) {
+    if (!menu) return false
+    var rel = false
+    menu.querySelectorAll('a.nav-link').forEach(function (a) {
+      if (isRelativeNavHref(a.getAttribute('href'))) rel = true
+    })
+    return rel
+  }
+
+  function prepareNavMenu (menu, baseHref) {
     if (!menu) return
-    if (menu.getAttribute('data-snt-hrefs-absolutized') === '1') return
-    absolutizeNavLinkHrefs(menu, window.location.href)
-    menu.setAttribute('data-snt-hrefs-absolutized', '1')
+    absolutizeNavLinkHrefs(menu, baseHref)
+    if (menuHasRelativeNavHrefs(menu)) menu.removeAttribute('data-snt-hrefs-absolutized')
+    else menu.setAttribute('data-snt-hrefs-absolutized', '1')
+  }
+
+  function resolveNavLinkUrl (raw, menu) {
+    if (!raw || raw.charAt(0) === '#') return null
+    menu = menu || document.querySelector('.nav-container [data-panel=menu]')
+    prepareNavMenu(menu)
+    var base = navMenuBaseHref(menu)
+    try {
+      if (raw.charAt(0) === '/') return new URL(raw, window.location.origin).href
+      return new URL(raw, base).href
+    } catch (e) {
+      return null
+    }
   }
 
   /** Copy site forest nav onto Antora's empty 404 layout (no page.navigation). */
@@ -150,7 +127,13 @@
     var start = '/home/'
     var startAnchor = document.querySelector('article.doc a[href^="/"]')
     if (startAnchor && startAnchor.getAttribute('href')) start = startAnchor.getAttribute('href')
-    fetch(start, { credentials: 'same-origin' })
+    var startAbs
+    try {
+      startAbs = new URL(start, window.location.origin).href
+    } catch (e) {
+      startAbs = start
+    }
+    fetch(startAbs, { credentials: 'same-origin' })
       .then(function (res) {
         if (!res.ok) throw new Error('fetch failed')
         return res.text()
@@ -163,10 +146,12 @@
         var again = document.querySelector('.nav-container [data-panel=menu]')
         if (again) {
           again.removeAttribute('data-snt-hrefs-absolutized')
-          prepareNavMenu(again)
+          again.removeAttribute('data-snt-nav-base')
+          prepareNavMenu(again, startAbs)
         }
         siteNavTreeCurrent()
         bindPanelScroll()
+        restoreNavScroll()
       })
       .catch(function () {
         /* ignore */
@@ -528,6 +513,7 @@
   window.siteNavTreeMarkOverviewLabels = markOverviewLabels
   window.siteNavTreeAbsolutizeNavHrefs = absolutizeNavLinkHrefs
   window.siteNavTreePrepareNavMenu = prepareNavMenu
+  window.siteNavTreeResolveNavLink = resolveNavLinkUrl
   document.addEventListener('click', onToggleClick)
   document.addEventListener('click', onLabelClick, true)
 
@@ -574,6 +560,7 @@
   }
   onSoftNavBefore(function () {
     flushNavScroll()
+    prepareNavMenu(document.querySelector('.nav-container [data-panel=menu]'))
   })
   onSoftNavLoaded(function (detail) {
     if (detail && detail.url && typeof markCurrentByPath === 'function') {

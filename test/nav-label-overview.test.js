@@ -236,6 +236,25 @@ test('absolutizeNavLinkHrefs freezes nav targets to site pathnames', () => {
   assert.equal(rel.children[0].getAttribute('href'), '/general-knowledge/explanation/internet-architecture/reliability/')
 })
 
+test('prepareNavMenu keeps forest base after SoftNav depth change', () => {
+  const leaf = item({ label: 'Reliability', href: 'internet-architecture/reliability/' })
+  const menu = new El('DIV', { attrs: { 'data-snt-nav-base': 'https://docs.example/general-knowledge/explanation/' } })
+  menu.append(new El('UL', { cls: ['nav-list'] }).append(leaf))
+  const { win } = load(menu, { pathname: '/general-knowledge/explanation/overview/' })
+  win.siteNavTreePrepareNavMenu(menu)
+  assert.equal(leaf.children[0].getAttribute('href'), '/general-knowledge/explanation/internet-architecture/reliability/')
+  assert.equal(menu.getAttribute('data-snt-hrefs-absolutized'), '1')
+})
+
+test('siteNavTreeResolveNavLink uses stored base not current pathname', () => {
+  const rel = item({ label: 'Reliability', href: 'internet-architecture/reliability/' })
+  const menu = new El('DIV', { attrs: { 'data-snt-nav-base': 'https://docs.example/general-knowledge/explanation/' } })
+  menu.append(new El('UL', { cls: ['nav-list'] }).append(rel))
+  const { win } = load(menu, { pathname: '/general-knowledge/explanation/overview/' })
+  const url = win.siteNavTreeResolveNavLink('internet-architecture/reliability/', menu)
+  assert.equal(url, 'https://docs.example/general-knowledge/explanation/internet-architecture/reliability/')
+})
+
 test('nodes without Overview, toggles, and modified clicks keep stock behavior', () => {
   const sec = item({ label: 'Sec', kids: [item({ label: 'Page', href: '/docs/a/p.html' })] })
   const { onLabelClick } = setup(sec)
