@@ -12,11 +12,16 @@ nav.nav-menu.adt-nav-tree-only .nav-item.snt-overview-label > .nav-text:focus-vi
   text-decoration: none;
 }
 
+/*
+ * Ancestors of the current page are on the path, not the current page: only
+ * the Overview leaf itself may carry current-page highlight. Keep path rows
+ * visually quiet so a folder and its Overview do not both look selected.
+ */
 nav.nav-menu.nav-tree-only .nav-item.snt-overview-label.is-current-path > .nav-text,
 nav.nav-menu.adt-nav-tree-only .nav-item.snt-overview-label.is-current-path > .nav-text {
-  color: var(--adt-accent) !important;
-  font-weight: 600 !important;
-  background: var(--adt-accent-soft);
+  color: inherit;
+  font-weight: inherit;
+  background: transparent;
 }
 
 nav.nav-menu.nav-tree-only .nav-item.snt-overview-label > .nav-text,

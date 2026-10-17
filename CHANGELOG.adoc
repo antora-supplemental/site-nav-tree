@@ -1,5 +1,12 @@
 = Changelog
 
+== 0.6.8 - 2026-10-17
+
+=== Fixed
+
+* **Overview leaf owns the landing highlight.** `pickBestCurrentPageItem` no longer prefers the shallowest match on component landings: the component root and its Overview leaf share one URL, and only the Overview leaf keeps `is-current-page` (the root keeps `is-current-path` only). Unlinked section labels on the current path no longer paint current-page chrome, so a folder and its Overview do not both look selected.
+* **Section breadcrumb crumbs link again.** Promoted section landings are unlinked in the tree, so Antora rendered their breadcrumb crumb as plain text (e.g. Docs site). `siteNavTreeCurrent` now re-links plain-text trail crumbs that match a section label to that section's Overview href, on hard load and after SoftNav swaps.
+
 == 0.6.7 - 2026-10-17
 
 === Fixed

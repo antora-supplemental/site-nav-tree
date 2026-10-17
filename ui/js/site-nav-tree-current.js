@@ -302,6 +302,7 @@
       persistMenu(menu)
       restoreNavScroll()
       markOverviewLabels(menu)
+      linkifyBreadcrumbSectionCrumbs(menu)
       try {
         document.documentElement.setAttribute('data-snt-nav-ready', '1')
       } catch (e) {
@@ -339,6 +340,7 @@
     persistMenu(menu)
     restoreNavScroll()
     markOverviewLabels(menu)
+    linkifyBreadcrumbSectionCrumbs(menu)
     try {
       document.documentElement.setAttribute('data-snt-nav-ready', '1')
     } catch (e) {
@@ -501,10 +503,10 @@
         })
         : []
     var pool = owned.length ? owned : items
-    var ownerHref = ownerRoot ? componentRootHref(ownerRoot) : ''
-    var onLanding = !!(ownerHref && want === ownerHref)
+    // Deepest match wins even on a component/section landing: the root and
+    // its Overview leaf share one URL, and only the Overview leaf may carry
+    // is-current-page. Ancestors get is-current-path from siteNavTreeCurrent.
     pool = pool.slice().sort(function (a, b) {
-      if (onLanding) return navDepth(a) - navDepth(b)
       return navDepth(b) - navDepth(a)
     })
     return pool[0]
@@ -536,6 +538,51 @@
    * Unlinked section labels with an Overview child get .snt-overview-label so
    * Valentus nav-tree hover/focus chrome matches linked component roots (.nav-link).
    */
+  /**
+   * Promoted section landings are unlinked in the tree (their Overview leaf
+   * owns the URL), so Antora renders their breadcrumb crumb as plain text.
+   * Re-link those crumbs to the section's Overview href; the current crumb
+   * and already-linked crumbs are left alone.
+   */
+  function linkifyBreadcrumbSectionCrumbs (menu) {
+    try {
+      if (!menu || !document.querySelectorAll) return
+      var trails = document.querySelectorAll(
+        '.adt-breadcrumb-trail, nav.breadcrumbs li, .breadcrumbs li'
+      )
+      ;[].forEach.call(trails, function (li) {
+        if (!li || (li.classList && li.classList.contains('adt-breadcrumb-trail--current'))) return
+        if (li.querySelector && li.querySelector('a')) return
+        var span = li.querySelector
+          ? li.querySelector('.adt-breadcrumb-trail-text, span')
+          : null
+        if (!span) return
+        var label = String(span.textContent || '').trim().replace(/\s+/g, ' ').toLowerCase()
+        if (!label) return
+        var overview = null
+        ;[].forEach.call(menu.querySelectorAll('li.nav-item'), function (item) {
+          if (overview) return
+          var textEl = item.querySelector
+            ? item.querySelector(':scope > .nav-text')
+            : null
+          if (!textEl) return
+          var text = String(textEl.textContent || '').trim().replace(/\s+/g, ' ').toLowerCase()
+          if (text === label) overview = overviewLinkFor(item)
+        })
+        if (!overview) return
+        var doc = span.ownerDocument || document
+        if (!doc.createElement) return
+        var a = doc.createElement('a')
+        a.setAttribute('class', 'adt-breadcrumb-trail-link')
+        a.setAttribute('href', overview.getAttribute('href') || overview.href)
+        a.textContent = span.textContent
+        span.parentNode.replaceChild(a, span)
+      })
+    } catch (e) {
+      /* breadcrumbs stay plain text */
+    }
+  }
+
   function markOverviewLabels (menu) {
     if (!menu) return
     menu.querySelectorAll('li.nav-item').forEach(function (li) {
@@ -612,6 +659,7 @@
   window.siteNavTreeExpandForestRootSections = expandForestRootSections
   window.siteNavTreeFindForestOwnerRootForPath = findForestOwnerRootForPath
   window.siteNavTreeMarkOverviewLabels = markOverviewLabels
+  window.siteNavTreeLinkifyBreadcrumbs = linkifyBreadcrumbSectionCrumbs
   window.siteNavTreeAbsolutizeNavHrefs = absolutizeNavLinkHrefs
   window.siteNavTreePrepareNavMenu = prepareNavMenu
   window.siteNavTreeResolveNavLink = resolveNavLinkUrl
