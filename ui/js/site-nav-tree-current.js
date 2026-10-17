@@ -246,6 +246,83 @@
     matches[0].classList.add('is-current-page')
   }
 
+  function isOverviewLabel (text) {
+    var t = String(text || '').trim().replace(/\s+/g, ' ').toLowerCase()
+    return t === 'overview' || t === 'home'
+  }
+
+  function directChild (el, tagName, className) {
+    var kids = (el && el.children) || []
+    for (var i = 0; i < kids.length; i++) {
+      var k = kids[i]
+      if (k.tagName === tagName && (!className || (k.classList && k.classList.contains(className)))) return k
+    }
+    return null
+  }
+
+  /**
+   * Overview link for a nav node: the first direct child item that is a link
+   * labelled Overview (or Home). Mirrors build-site-navigation.js, which emits
+   * an Overview leaf under every component root / promoted section.
+   */
+  function overviewLinkFor (li) {
+    var list = directChild(li, 'UL', 'nav-list')
+    if (!list) return null
+    var kids = list.children || []
+    for (var i = 0; i < kids.length; i++) {
+      var item = kids[i]
+      if (item.tagName !== 'LI') continue
+      var a = directChild(item, 'A', 'nav-link')
+      if (a && isOverviewLabel(a.textContent) && a.getAttribute('href')) return a
+    }
+    return null
+  }
+
+  function hasModifier (e) {
+    return !!(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || (e.button && e.button !== 0))
+  }
+
+  /**
+   * Parent label with an Overview child: one click expands the node *and* opens
+   * the Overview article. Never collapses (the caret button still toggles).
+   * - Unlinked label (Core, Extensions): stock Default UI would only toggle, so
+   *   take over in capture phase and activate the Overview anchor (SoftNav sees
+   *   a normal nav-link click).
+   * - Linked label (component root): expand first, then let the link navigate
+   *   (or redirect to the Overview anchor when the URLs differ).
+   * Nodes without an Overview child keep stock behavior.
+   */
+  function onLabelClick (e) {
+    if (e.defaultPrevented || hasModifier(e)) return
+    var target = e.target
+    if (!target || !target.closest) return
+    var menu = document.querySelector('.nav-container [data-panel=menu]')
+    if (!menu || !menu.contains(target)) return
+    if (target.closest('.nav-item-toggle')) return
+
+    var link = target.closest('a.nav-link')
+    var label = link || target.closest('.nav-text')
+    if (!label) return
+    var li = label.parentNode
+    if (!li || li.tagName !== 'LI' || !li.classList.contains('nav-item')) return
+
+    var overview = overviewLinkFor(li)
+    if (!overview) return
+
+    li.classList.add('is-active')
+    persistMenu(menu)
+
+    if (link) {
+      if (link === overview || normalizeHref(link.getAttribute('href')) === normalizeHref(overview.getAttribute('href'))) return
+      e.preventDefault()
+      overview.click()
+      return
+    }
+    e.stopPropagation()
+    e.preventDefault()
+    overview.click()
+  }
+
   function onToggleClick (e) {
     var toggle = e.target && e.target.closest && e.target.closest('.nav-item-toggle')
     if (!toggle) return
@@ -261,7 +338,9 @@
   window.siteNavTreeSaveScroll = flushNavScroll
   window.siteNavTreeRestoreScroll = restoreNavScroll
 
+  window.siteNavTreeOverviewLink = overviewLinkFor
   document.addEventListener('click', onToggleClick)
+  document.addEventListener('click', onLabelClick, true)
 
   // Debounced persist while the reader moves the left rail only.
   document.addEventListener(

@@ -1,5 +1,12 @@
 = Changelog
 
+== 0.6.0 - 2026-10-17
+
+=== Added
+
+* **Parent label = Overview.** In `site-nav-tree-current.js`, clicking the label of any nav node that has a direct **Overview** (or **Home**) child link now expands the node (never collapses; the caret still toggles) and opens that Overview article. Unlinked section labels (Core, Extensions) activate the Overview anchor, so SoftNav handles it like a normal nav-link click. Linked component roots (Demo pages, Tools, Platforms) expand, then navigate; if the root URL differs from its Overview URL the click is redirected to Overview. Expansion is persisted with the existing `sessionStorage` state. Modified clicks, the caret button, and nodes without an Overview child keep stock Default UI behavior.
+* `window.siteNavTreeOverviewLink(li)` helper; tests in `test/nav-label-overview.test.js`.
+
 == 0.5.7 - 2026-10-17
 
 === Fixed

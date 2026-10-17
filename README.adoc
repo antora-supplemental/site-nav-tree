@@ -71,6 +71,8 @@ Valentus prints the current component title above the tree. With site-wide roots
 
 Align the breadcrumb component picker with the same curation (read `site.keys.site_nav_tree_*` via a small helper, or hard-match the playbook `include` list).
 
+**Parent label opens Overview.** When a nav node has a direct **Overview** (or **Home**) child link, clicking the node's *label* expands it and loads that Overview (same as clicking the Overview child). This covers forest roots (Demo pages, Tools, Platforms) and unlinked section labels (Core, Extensions); the caret button still collapses. Nodes without an Overview child keep stock behavior. Because the extension always emits an Overview leaf under each root and promoted section, no extra authoring is needed.
+
 `site-nav-tree-current.js` loads after `site.js` so expand state prefers the deepest `is-current-page` when URLs collide and open trees restore from `sessionStorage` after navigation.
 
 When Valentus is active with `site.keys.site_nav_tree=true`, the theme **keeps** the mast component picker (mobile jump target + context) and places version to its right; it only suppresses a **trail** crumb that duplicates the component root so the sidebar forest and mast do not both spell the same name in the path. Hubs should not need a one-off breadcrumb override for that.
