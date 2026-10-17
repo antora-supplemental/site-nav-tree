@@ -1,6 +1,7 @@
 /**
  * Local DOM filter for the left nav tree (no search index).
- * Toggle via extension config `filter: true`. Re-applies after SoftNav when the panel is not swapped.
+ * Toggle via extension config `filter: true` or `filter: { enabled: true }`.
+ * Re-applies after SoftNav when the panel is not swapped (`swapNav: false`).
  */
 ;(function () {
   'use strict'

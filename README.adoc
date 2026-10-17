@@ -5,7 +5,7 @@
 :page-doc-type: reference
 :page-orig-author: Ryan Johnson
 :page-last-author: Cursor agent on behalf of Ryan Johnson
-:page-last-edited: 2026-08-30
+:page-last-edited: 2026-10-16
 
 Multi-component Antora hubs hide other components behind a drawer (or, with Valentus tree-only chrome, behind breadcrumbs alone). Readers (and authors) miss whole sections.
 
@@ -57,14 +57,15 @@ antora:
       # exclude: [internal-draft]
       # Sticky label filter above the nav tree (DOM only, not site search)
       filter: true
-      # ui: false  # skip auto-inject; copy ui/partials and ui/js yourself
+      # injectUi: true  # inject nav-menu + site-nav-tree-current.js without the filter
+      # injectUi: false  # with filter: true, skip auto-inject and copy ui/ manually
 ----
 
-== UI injection (default) and nav filter
+== UI injection and nav filter
 
-By default the extension injects the companion `nav-menu` partial and `site-nav-tree-current.js` at `uiLoaded`. Set `ui: false` on the extension if you prefer to copy files from `ui/` into hub `supplemental-ui` manually (older workflow).
+Without `filter`, the extension only wraps navigation data — copy companion files from `ui/` into hub `supplemental-ui` as before, or set `injectUi: true` (alias `ui: true`) to inject `nav-menu` and `site-nav-tree-current.js` at `uiLoaded`.
 
-With `filter: true`, the extension also injects `nav-tree-filter.css` / `nav-tree-filter.js` and sets `site.keys.site_nav_tree_filter` so the filter field renders above the tree. Filtering is local DOM only (label substring match, debounced); it is not Lunr or semantic search. Works with SoftNav when `swapNav` is off.
+With `filter: true` or `filter: { enabled: true }`, the extension injects filter CSS/JS, sets `site.keys.site_nav_tree_filter`, and injects the companion partial + `site-nav-tree-current.js` unless `injectUi: false` or `ui: false`. Filtering is local DOM only (label substring match, debounced); it is not Lunr or semantic search. The filter script listens for `soft-nav:loaded` / `SoftNav.on('loaded')` and re-applies the query when SoftNav keeps the left panel (`swapNav: false`).
 
 Valentus prints the current component title above the tree. With site-wide roots that line is redundant — the injected `nav-menu` partial omits `adt-nav-component-title`.
 
@@ -96,6 +97,12 @@ When you enable **site-nav-tree**, also ship **nav-typology** (+ companion UI co
 
 | `exclude`
 | Component names omitted from the site tree (wins over `include`).
+
+| `filter`
+| Boolean (`true`) or object `{ enabled: true }`. Enables sidebar label filter + companion UI injection. Aliases: `navFilter`, `navTreeFilter`.
+
+| `injectUi` / `ui`
+| When `true`, inject companion partials/assets on `uiLoaded`. Default: `true` when `filter` is enabled, otherwise `false` (manual copy workflow).
 |===
 
 == Tradeoff

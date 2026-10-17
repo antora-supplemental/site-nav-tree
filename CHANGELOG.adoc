@@ -2,8 +2,8 @@
 
 == 0.5.4 - 2026-10-16
 
-* Optional left-nav **text filter** (`filter: true`): injects filter field, CSS/JS, and sets `site.keys.site_nav_tree_filter` for the companion `nav-menu` partial.
-* Auto-inject companion UI (`uiLoaded`): `nav-menu.hbs`, `site-nav-tree-current.js`; set `ui: false` to copy partials manually as before.
+* Optional left-nav **text filter**: `filter: true`, `filter: { enabled: true }`, or aliases `navFilter` / `navTreeFilter`. Injects filter field, CSS/JS; sets `site.keys.site_nav_tree_filter`. Debounced label match; re-bind on SoftNav when the nav panel is not swapped.
+* `uiLoaded` injection when the filter is on or when `injectUi` / `ui` is `true` (`nav-menu.hbs`, `site-nav-tree-current.js`; filter assets when enabled). Appends to `footer-scripts` or hub `footer-content` / `head-meta`.
 
 == 0.5.3 - 2026-09-26
 
