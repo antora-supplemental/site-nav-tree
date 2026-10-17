@@ -4,6 +4,18 @@
   Keeps stock nav-tree partial + Default UI / Valentus expand-collapse JS.
 }}
 <div class="nav-panel-menu is-active" data-panel="menu">
+  {{#if site.keys.site_nav_tree_filter}}
+  <div class="nav-tree-filter">
+    <input
+      class="nav-tree-filter-input"
+      type="search"
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Filter navigation"
+      placeholder="Filter navigation…"
+      data-nav-tree-filter>
+  </div>
+  {{/if}}
   <nav class="nav-menu nav-tree-only adt-nav-tree-only" aria-label="Site documentation">
     <button class="nav-menu-toggle" aria-label="Toggle expand and collapse of all item groups" style="display: none"></button>
     {{#with page.navigation}}

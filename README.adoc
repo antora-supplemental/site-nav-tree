@@ -55,22 +55,22 @@ antora:
         - agent-rules
       # Optional denylist (wins over include)
       # exclude: [internal-draft]
+      # Sticky label filter above the nav tree (DOM only, not site search)
+      filter: true
+      # ui: false  # skip auto-inject; copy ui/partials and ui/js yourself
 ----
 
-== Valentus companion partial (recommended)
+== UI injection (default) and nav filter
 
-Valentus prints the current component title above the tree. With site-wide roots that line is redundant. Copy the companion partial into your hub `supplemental-ui`:
+By default the extension injects the companion `nav-menu` partial and `site-nav-tree-current.js` at `uiLoaded`. Set `ui: false` on the extension if you prefer to copy files from `ui/` into hub `supplemental-ui` manually (older workflow).
 
-[source,bash]
-----
-cp node_modules/@antora-supplemental/site-nav-tree/ui/partials/nav-menu.hbs supplemental-ui/partials/
-----
+With `filter: true`, the extension also injects `nav-tree-filter.css` / `nav-tree-filter.js` and sets `site.keys.site_nav_tree_filter` so the filter field renders above the tree. Filtering is local DOM only (label substring match, debounced); it is not Lunr or semantic search. Works with SoftNav when `swapNav` is off.
 
-Git dependency path may differ; use the package's `ui/partials/nav-menu.hbs`.
+Valentus prints the current component title above the tree. With site-wide roots that line is redundant — the injected `nav-menu` partial omits `adt-nav-component-title`.
 
 Align the breadcrumb component picker with the same curation (read `site.keys.site_nav_tree_*` via a small helper, or hard-match the playbook `include` list).
 
-Also copy `ui/js/site-nav-tree-current.js` into hub `supplemental-ui/js/` and load it **after** `site.js` (footer, non-deferred or deferred after site.js) so expand state prefers the deepest `is-current-page` when URLs collide **and** so open trees are restored from `sessionStorage` after navigation (other component roots stay expanded).
+`site-nav-tree-current.js` loads after `site.js` so expand state prefers the deepest `is-current-page` when URLs collide and open trees restore from `sessionStorage` after navigation.
 
 When Valentus is active with `site.keys.site_nav_tree=true`, the theme **keeps** the mast component picker (mobile jump target + context) and places version to its right; it only suppresses a **trail** crumb that duplicates the component root so the sidebar forest and mast do not both spell the same name in the path. Hubs should not need a one-off breadcrumb override for that.
 
