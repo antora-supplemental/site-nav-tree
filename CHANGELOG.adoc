@@ -1,8 +1,12 @@
 = Changelog
 
+== 0.5.6 - 2026-10-16
+
+* Nav label filter sticky wrapper uses `background: transparent` (v0.5.5 still painted side-panel / panel fallbacks on the bar).
+
 == 0.5.5 - 2026-10-16
 
-* Nav label filter CSS inherits Valentus / hub tokens (`--adt-font`, `--adt-elevated`, `--adt-border`, `--adt-ink`, `--adt-accent`, `--adt-nav-bg`, `--adt-side-panel-bg`, `--adt-mast-pad-h`) with Default UI fallbacks; sticky bar matches nav chrome; input focus ring aligns with navbar search (accent + soft glow). `color-scheme: inherit`; tames native `type=search` chrome.
+* Nav label filter CSS inherits Valentus / hub tokens (`--adt-font`, `--adt-elevated`, `--adt-border`, `--adt-ink`, `--adt-accent`, `--adt-mast-pad-h`) with Default UI fallbacks; input focus ring aligns with navbar search (accent + soft glow). `color-scheme: inherit`; tames native `type=search` chrome.
 
 == 0.5.4 - 2026-10-16
 

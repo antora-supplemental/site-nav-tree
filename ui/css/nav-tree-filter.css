@@ -6,7 +6,7 @@
   z-index: 1;
   box-sizing: border-box;
   padding: 0.45rem var(--adt-mast-pad-h, 0.75rem) 0.3rem;
-  background: var(--adt-side-panel-bg, var(--adt-nav-bg, var(--panel-background, transparent)));
+  background: transparent;
   color: inherit;
 }
 
