@@ -1,7 +1,9 @@
 /**
- * Prefer the deepest is-current-page when site-nav-tree inlines many components.
- * Default UI expands only the first match; a duplicated start-page URL on the
- * component root then leaves children behind an inactive anonymous wrapper.
+ * Prefer the deepest is-current-page *within the owning component* when
+ * site-nav-tree inlines many components. Default UI expands only the first
+ * match; a duplicated start-page URL on the component root then leaves children
+ * behind an inactive anonymous wrapper. Cross-component nav xrefs (same URL in
+ * another forest root) must not win over the real component landing.
  *
  * Also retains expand/collapse state across page navigations via sessionStorage
  * so opening other component trees is not wiped when the current-path rewrite
@@ -308,10 +310,8 @@
       return
     }
 
-    currents.sort(function (a, b) {
-      return (parseInt(b.getAttribute('data-depth'), 10) || 0) - (parseInt(a.getAttribute('data-depth'), 10) || 0)
-    })
-    var best = currents[0]
+    var best = pickBestCurrentPageItem(currents, currentPathname())
+    if (!best) best = currents[0]
 
     currents.forEach(function (el) {
       if (el !== best) el.classList.remove('is-current-page')
@@ -361,13 +361,12 @@
       }
     })
     if (!matches.length) return
-    matches.sort(function (a, b) {
-      return (parseInt(b.getAttribute('data-depth'), 10) || 0) - (parseInt(a.getAttribute('data-depth'), 10) || 0)
-    })
+    var best = pickBestCurrentPageItem(matches, want)
+    if (!best) best = matches[0]
     menu.querySelectorAll('.nav-item.is-current-page').forEach(function (el) {
       el.classList.remove('is-current-page')
     })
-    matches[0].classList.add('is-current-page')
+    best.classList.add('is-current-page')
   }
 
   function isOverviewLabel (text) {
@@ -412,6 +411,51 @@
     } catch (e) {
       return ''
     }
+  }
+
+  function navDepth (el) {
+    return parseInt(el && el.getAttribute('data-depth'), 10) || 0
+  }
+
+  /** Forest depth-0 component root link for a nav item (Platforms, General Knowledge, …). */
+  function componentRootHref (li) {
+    if (!li || !li.closest) return ''
+    var root = li
+    while (root) {
+      if (root.classList && root.classList.contains('nav-item') && navDepth(root) === 0) break
+      root = root.parentElement ? root.parentElement.closest('li.nav-item') : null
+    }
+    if (!root) return ''
+    var a = root.querySelector(':scope > .nav-link')
+    return a ? normalizeHref(a.getAttribute('href') || a.href) : ''
+  }
+
+  /** True when pathname is the component landing or a page under that root. */
+  function pathUnderComponentRoot (pathname, rootHref) {
+    if (!pathname || !rootHref) return false
+    if (pathname === rootHref) return true
+    if (rootHref === '/') return pathname.indexOf('/') === 0
+    var prefix = rootHref.replace(/\/+$/, '')
+    return pathname.indexOf(prefix + '/') === 0
+  }
+
+  /**
+   * Among nav items marked current for one URL, prefer matches under the forest
+   * component root that owns the pathname, then the deepest within that subtree.
+   */
+  function pickBestCurrentPageItem (items, pathname) {
+    if (!items || !items.length) return null
+    var want = normalizeHref(pathname || currentPathname())
+    var owned = want
+      ? items.filter(function (li) {
+        return pathUnderComponentRoot(want, componentRootHref(li))
+      })
+      : []
+    var pool = owned.length ? owned : items
+    pool = pool.slice().sort(function (a, b) {
+      return navDepth(b) - navDepth(a)
+    })
+    return pool[0]
   }
 
   /**
@@ -510,6 +554,8 @@
   window.siteNavTreeRestoreScroll = restoreNavScroll
 
   window.siteNavTreeOverviewLink = overviewLinkFor
+  window.siteNavTreePickBestCurrentPageItem = pickBestCurrentPageItem
+  window.siteNavTreeComponentRootHref = componentRootHref
   window.siteNavTreeMarkOverviewLabels = markOverviewLabels
   window.siteNavTreeAbsolutizeNavHrefs = absolutizeNavLinkHrefs
   window.siteNavTreePrepareNavMenu = prepareNavMenu

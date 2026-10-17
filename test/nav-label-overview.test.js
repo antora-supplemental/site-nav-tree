@@ -38,6 +38,10 @@ class El {
     return this._text + this.children.map((c) => c.textContent).join('')
   }
 
+  get parentElement () {
+    return this.parentNode
+  }
+
   getAttribute (n) {
     return n in this._attrs ? this._attrs[n] : null
   }
@@ -94,8 +98,9 @@ function matches (el, sel) {
     .every((c) => el.classList.contains(c))
 }
 
-function item ({ label, href, kids = [] }) {
+function item ({ label, href, kids = [], depth = null }) {
   const li = new El('LI', { cls: ['nav-item'] })
+  if (depth != null) li.setAttribute('data-depth', String(depth))
   if (kids.length) li.append(new El('BUTTON', { cls: ['nav-item-toggle'] }))
   if (href) {
     const a = new El('A', { cls: ['nav-link'], attrs: { href } })
@@ -253,6 +258,60 @@ test('siteNavTreeResolveNavLink uses stored base not current pathname', () => {
   const { win } = load(menu, { pathname: '/general-knowledge/explanation/overview/' })
   const url = win.siteNavTreeResolveNavLink('internet-architecture/reliability/', menu)
   assert.equal(url, 'https://docs.example/general-knowledge/explanation/internet-architecture/reliability/')
+})
+
+test('pickBestCurrentPageItem prefers owning component over cross-component xref', () => {
+  const gkXref = item({ label: 'General Knowledge', href: '/general-knowledge/', depth: 2 })
+  const devcentr = item({
+    label: 'DevCentr',
+    href: '/platforms/devcentr/',
+    depth: 1,
+    kids: [gkXref],
+  })
+  const platforms = item({
+    label: 'Platforms',
+    href: '/platforms/',
+    depth: 0,
+    kids: [devcentr],
+  })
+  const gkOverview = item({ label: 'Overview', href: '/general-knowledge/', depth: 1 })
+  const gkRoot = item({
+    label: 'General Knowledge',
+    href: '/general-knowledge/',
+    depth: 0,
+    kids: [gkOverview],
+  })
+  const menu = new El('DIV')
+  menu.append(new El('UL', { cls: ['nav-list'] }).append(platforms, gkRoot))
+  const { win } = load(menu, { pathname: '/general-knowledge/' })
+  const candidates = [platforms, devcentr, gkXref, gkRoot, gkOverview]
+  candidates.forEach((li) => li.classList.add('is-current-page'))
+  const best = win.siteNavTreePickBestCurrentPageItem(candidates, '/general-knowledge/')
+  assert.equal(best, gkOverview, 'deepest match under the General Knowledge forest root')
+  assert.equal(win.siteNavTreeComponentRootHref(gkXref), '/platforms/')
+  assert.equal(win.siteNavTreeComponentRootHref(gkOverview), '/general-knowledge/')
+})
+
+test('siteNavTreeCurrent rewrites duplicate current markers to owning component', () => {
+  const gkXref = item({ label: 'General Knowledge', href: '/general-knowledge/', depth: 2 })
+  const devcentr = item({ label: 'DevCentr', href: '/platforms/devcentr/', depth: 1, kids: [gkXref] })
+  const platforms = item({ label: 'Platforms', href: '/platforms/', depth: 0, kids: [devcentr] })
+  const gkOverview = item({ label: 'Overview', href: '/general-knowledge/', depth: 1 })
+  const gkRoot = item({
+    label: 'General Knowledge',
+    href: '/general-knowledge/',
+    depth: 0,
+    kids: [gkOverview],
+  })
+  const menu = new El('DIV')
+  menu.append(new El('UL', { cls: ['nav-list'] }).append(platforms, gkRoot))
+  const { win } = load(menu, { pathname: '/general-knowledge/' })
+  ;[gkRoot, gkOverview, gkXref].forEach((li) => li.classList.add('is-current-page'))
+  win.siteNavTreeCurrent()
+  assert.equal(gkXref.classList.contains('is-current-page'), false)
+  assert.equal(gkOverview.classList.contains('is-current-page'), true)
+  assert.equal(gkRoot.classList.contains('is-current-path'), true)
+  assert.equal(platforms.classList.contains('is-current-path'), false)
 })
 
 test('nodes without Overview, toggles, and modified clicks keep stock behavior', () => {

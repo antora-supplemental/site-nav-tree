@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.6.4 - 2026-10-17
+
+=== Fixed
+
+* **Cross-component nav xrefs stole current-page highlight.** `siteNavTreeCurrent` / `markCurrentByPath` preferred the deepest `is-current-page` match for a URL. Hub forests duplicate landing URLs when a component nav cross-links another root (Platforms → DevCentr → General Knowledge). Clicking the General Knowledge component root then highlighted the xref under Platforms while article content was correct. Current-page selection now prefers matches under the forest component root that owns the pathname (prefix), then deepest within that subtree.
+
 == 0.6.3 - 2026-10-17
 
 === Fixed
