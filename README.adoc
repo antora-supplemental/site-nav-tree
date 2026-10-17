@@ -138,7 +138,7 @@ Suggested member of the Facto compose pack (Valentus stays lean — theme only).
 
 Shared multi-root forest fixtures live in link:https://github.com/antora-supplemental/demo-data[`demo-data`^] at `docs/fixtures/site-nav-tree/` (`catalog-alpha`, `catalog-beta`).
 
-* Do **not** copy baseline AsciiDoc from `docs/theme-demo` into this extension repo.
+* Do **not** copy baseline AsciiDoc from `docs/demo-pages` into this extension repo.
 * Keep extension-local `examples/docs` minimal for CI; promote pages here when `facto-stack` and another demo both need the same forest.
 
 [source,yaml]
