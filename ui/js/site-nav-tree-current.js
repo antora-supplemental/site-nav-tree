@@ -314,10 +314,6 @@
     var best = pickBestCurrentPageItem(currents, wantPath, menu)
     if (!best) best = currents[0]
 
-    currents.forEach(function (el) {
-      if (el !== best) el.classList.remove('is-current-page')
-    })
-
     menu.querySelectorAll('.nav-item.is-current-path').forEach(function (el) {
       el.classList.remove('is-current-path')
     })
@@ -328,10 +324,14 @@
     var node = best
     while (node && !(node.classList && node.classList.contains('nav-menu'))) {
       if (node.tagName === 'LI' && node.classList.contains('nav-item')) {
+        if (node !== best) node.classList.remove('is-current-page')
         node.classList.add('is-active', 'is-current-path')
       }
       node = node.parentNode
     }
+    menu.querySelectorAll('.nav-item.is-current-page').forEach(function (el) {
+      if (el !== best) el.classList.remove('is-current-page')
+    })
     best.classList.add('is-active', 'is-current-page')
 
     applyExpanded(menu, remembered)
@@ -370,6 +370,7 @@
       el.classList.remove('is-current-page')
     })
     best.classList.add('is-current-page')
+    siteNavTreeCurrent()
   }
 
   function isOverviewLabel (text) {

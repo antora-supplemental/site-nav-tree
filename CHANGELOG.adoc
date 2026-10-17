@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.6.7 - 2026-10-17
+
+=== Fixed
+
+* **Dual current-page chrome (parent + child).** `siteNavTreeCurrent` now strips `is-current-page` from every nav item except the single winner (including ancestors that only get `is-current-path`). `markCurrentByPath` runs the full current-path rewrite after picking the owner-forest match so SoftNav leaves no stale Antora markers.
+
 == 0.6.6 - 2026-10-17
 
 === Fixed

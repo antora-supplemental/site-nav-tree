@@ -315,6 +315,26 @@ test('siteNavTreeCurrent rewrites duplicate current markers to owning component'
   assert.equal(platforms.classList.contains('is-current-path'), false)
 })
 
+test('siteNavTreeCurrent keeps a single is-current-page when parent and child both marked', () => {
+  const child = item({ label: 'Changelog', href: '/platforms/devcentr/changelog/', depth: 2 })
+  const devcentr = item({
+    label: 'DevCentr',
+    href: '/platforms/devcentr/',
+    depth: 1,
+    kids: [child],
+  })
+  const platforms = item({ label: 'Platforms', href: '/platforms/', depth: 0, kids: [devcentr] })
+  const menu = new El('DIV')
+  menu.append(new El('UL', { cls: ['nav-list'] }).append(platforms))
+  const { win } = load(menu, { pathname: '/platforms/devcentr/changelog/' })
+  devcentr.classList.add('is-current-page')
+  child.classList.add('is-current-page')
+  win.siteNavTreeCurrent()
+  assert.equal(devcentr.classList.contains('is-current-page'), false)
+  assert.equal(child.classList.contains('is-current-page'), true)
+  assert.equal(devcentr.classList.contains('is-current-path'), true)
+})
+
 test('expandForestRootSections opens all depth-1 branches under a forest root', () => {
   const secA = item({ label: 'Explanation', href: '/general-knowledge/explanation/', depth: 1 })
   const secB = item({ label: 'Tutorial', href: '/general-knowledge/tutorial/', depth: 1 })
