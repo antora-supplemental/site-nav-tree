@@ -548,13 +548,13 @@
     try {
       if (!menu || !document.querySelectorAll) return
       var trails = document.querySelectorAll(
-        '.adt-breadcrumb-trail, nav.breadcrumbs li, .breadcrumbs li'
+        '.valentus-breadcrumb-trail, nav.breadcrumbs li, .breadcrumbs li'
       )
       ;[].forEach.call(trails, function (li) {
-        if (!li || (li.classList && li.classList.contains('adt-breadcrumb-trail--current'))) return
+        if (!li || (li.classList && li.classList.contains('valentus-breadcrumb-trail--current'))) return
         if (li.querySelector && li.querySelector('a')) return
         var span = li.querySelector
-          ? li.querySelector('.adt-breadcrumb-trail-text, span')
+          ? li.querySelector('.valentus-breadcrumb-trail-text, span')
           : null
         if (!span) return
         var label = String(span.textContent || '').trim().replace(/\s+/g, ' ').toLowerCase()
@@ -573,7 +573,7 @@
         var doc = span.ownerDocument || document
         if (!doc.createElement) return
         var a = doc.createElement('a')
-        a.setAttribute('class', 'adt-breadcrumb-trail-link')
+        a.setAttribute('class', 'valentus-breadcrumb-trail-link')
         a.setAttribute('href', overview.getAttribute('href') || overview.href)
         a.textContent = span.textContent
         span.parentNode.replaceChild(a, span)
@@ -718,8 +718,8 @@
     restoreNavScroll()
   }
 
-  if (typeof adtChromeBind === 'function') {
-    adtChromeBind({
+  if (typeof bindSoftNavContext === 'function') {
+    bindSoftNavContext({
       onBefore: beforeNav,
       onLoaded: afterNav,
     })

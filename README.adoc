@@ -67,7 +67,7 @@ Without `filter`, the extension only wraps navigation data — copy companion fi
 
 With `filter: true` or `filter: { enabled: true }`, the extension injects filter CSS/JS, sets `site.keys.site_nav_tree_filter`, and injects the companion partial + `site-nav-tree-current.js` unless `injectUi: false` or `ui: false`. Filtering is local DOM only (label substring match, debounced); it is not Lunr or semantic search. The filter script listens for `soft-nav:loaded` / `SoftNav.on('loaded')` and re-applies the query when SoftNav keeps the left panel (`swapNav: false`).
 
-Valentus prints the current component title above the tree. With site-wide roots that line is redundant — the injected `nav-menu` partial omits `adt-nav-component-title`.
+Valentus prints the current component title above the tree. With site-wide roots that line is redundant — the injected `nav-menu` partial omits `valentus-nav-component-title`.
 
 Align the breadcrumb component picker with the same curation (read `site.keys.site_nav_tree_*` via a small helper, or hard-match the playbook `include` list).
 

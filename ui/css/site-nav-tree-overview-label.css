@@ -4,11 +4,11 @@
  * Mark items with .snt-overview-label in site-nav-tree-current.js.
  */
 nav.nav-menu.nav-tree-only .nav-item.snt-overview-label > .nav-text:hover,
-nav.nav-menu.adt-nav-tree-only .nav-item.snt-overview-label > .nav-text:hover,
+nav.nav-menu.valentus-nav-tree-only .nav-item.snt-overview-label > .nav-text:hover,
 nav.nav-menu.nav-tree-only .nav-item.snt-overview-label > .nav-text:focus-visible,
-nav.nav-menu.adt-nav-tree-only .nav-item.snt-overview-label > .nav-text:focus-visible {
-  color: var(--adt-ink) !important;
-  background: var(--adt-accent-soft);
+nav.nav-menu.valentus-nav-tree-only .nav-item.snt-overview-label > .nav-text:focus-visible {
+  color: var(--valentus-ink) !important;
+  background: var(--valentus-accent-soft);
   text-decoration: none;
 }
 
@@ -18,13 +18,13 @@ nav.nav-menu.adt-nav-tree-only .nav-item.snt-overview-label > .nav-text:focus-vi
  * visually quiet so a folder and its Overview do not both look selected.
  */
 nav.nav-menu.nav-tree-only .nav-item.snt-overview-label.is-current-path > .nav-text,
-nav.nav-menu.adt-nav-tree-only .nav-item.snt-overview-label.is-current-path > .nav-text {
+nav.nav-menu.valentus-nav-tree-only .nav-item.snt-overview-label.is-current-path > .nav-text {
   color: inherit;
   font-weight: inherit;
   background: transparent;
 }
 
 nav.nav-menu.nav-tree-only .nav-item.snt-overview-label > .nav-text,
-nav.nav-menu.adt-nav-tree-only .nav-item.snt-overview-label > .nav-text {
+nav.nav-menu.valentus-nav-tree-only .nav-item.snt-overview-label > .nav-text {
   cursor: pointer;
 }

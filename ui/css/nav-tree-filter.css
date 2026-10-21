@@ -1,11 +1,11 @@
-/* Left-nav label filter — inherit Valentus (--adt-*) or Default UI panel/body tokens. */
+/* Left-nav label filter — inherit Valentus (--valentus-*) or Default UI panel/body tokens. */
 
 .nav-panel-menu[data-panel='menu'] .nav-tree-filter {
   position: sticky;
   top: 0;
   z-index: 1;
   box-sizing: border-box;
-  padding: 0.45rem var(--adt-mast-pad-h, 0.75rem) 0.3rem;
+  padding: 0.45rem var(--valentus-mast-pad-h, 0.75rem) 0.3rem;
   background: transparent;
   color: inherit;
 }
@@ -17,13 +17,13 @@
   padding: 0.4rem 0.55rem;
   color-scheme: inherit;
   font: inherit;
-  font-family: var(--adt-font, var(--body-font-family, inherit));
+  font-family: var(--valentus-font, var(--body-font-family, inherit));
   font-size: 0.875rem;
   line-height: 1.35;
-  border: 1px solid var(--adt-border, var(--panel-border-color, var(--color-gray-50, currentColor)));
-  border-radius: var(--adt-radius, var(--adt-radius-sm, 0.25rem));
-  background: var(--adt-elevated, var(--body-background, inherit));
-  color: var(--adt-ink, var(--body-font-color, inherit));
+  border: 1px solid var(--valentus-border, var(--panel-border-color, var(--color-gray-50, currentColor)));
+  border-radius: var(--valentus-radius, var(--valentus-radius-sm, 0.25rem));
+  background: var(--valentus-elevated, var(--body-background, inherit));
+  color: var(--valentus-ink, var(--body-font-color, inherit));
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
     box-shadow 0.2s ease;
   -webkit-appearance: none;
@@ -36,18 +36,18 @@
 }
 
 .nav-tree-filter-input::placeholder {
-  color: var(--adt-ink-muted, var(--body-font-color-alt, var(--color-gray-70, inherit)));
+  color: var(--valentus-ink-muted, var(--body-font-color-alt, var(--color-gray-70, inherit)));
   opacity: 0.85;
 }
 
 .nav-tree-filter-input:hover {
-  background: var(--adt-elevated, var(--body-background, inherit));
+  background: var(--valentus-elevated, var(--body-background, inherit));
 }
 
 .nav-tree-filter-input:focus {
   outline: none;
-  border-color: var(--adt-accent, var(--link-font-color, currentColor));
-  box-shadow: 0 0 0 3px var(--adt-accent-soft, color-mix(in srgb, currentColor 12%, transparent));
+  border-color: var(--valentus-accent, var(--link-font-color, currentColor));
+  box-shadow: 0 0 0 3px var(--valentus-accent-soft, color-mix(in srgb, currentColor 12%, transparent));
 }
 
 nav.nav-menu li.nav-item.nav-tree-filter-hidden {

@@ -74,7 +74,7 @@
 
 == 0.5.5 - 2026-10-16
 
-* Nav label filter CSS inherits Valentus / hub tokens (`--adt-font`, `--adt-elevated`, `--adt-border`, `--adt-ink`, `--adt-accent`, `--adt-mast-pad-h`) with Default UI fallbacks; input focus ring aligns with navbar search (accent + soft glow). `color-scheme: inherit`; tames native `type=search` chrome.
+* Nav label filter CSS inherits Valentus / hub tokens (`--valentus-font`, `--valentus-elevated`, `--valentus-border`, `--valentus-ink`, `--valentus-accent`, `--valentus-mast-pad-h`) with Default UI fallbacks; input focus ring aligns with navbar search (accent + soft glow). `color-scheme: inherit`; tames native `type=search` chrome.
 
 == 0.5.4 - 2026-10-16
 
