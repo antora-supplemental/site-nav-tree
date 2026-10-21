@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.6.13 - 2026-10-21
+
+=== Fixed
+
+* **404 nav hydration default:** canonical hub start is `/home/` again (hub `home` component; the `docs` component name is retired — see xref:README.adoc#hub-home-component-naming[Hub component naming]). The 0.6.12 forest depth-0 link fallback stays.
+
 == 0.6.12 - 2026-10-21
 
 === Fixed

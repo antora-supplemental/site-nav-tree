@@ -4,11 +4,11 @@
  *   pnpm dlx playwright@1.49.0 install chromium
  *   node site-nav-tree/scripts/soft-nav-forest-smoke.mjs [baseUrl]
  *
- * Default baseUrl: https://docs.antora-supplemental.org/docs/
+ * Default baseUrl: https://docs.antora-supplemental.org/home/
  */
 import { chromium } from 'playwright'
 
-const baseUrl = process.argv[2] || 'https://docs.antora-supplemental.org/docs/'
+const baseUrl = process.argv[2] || 'https://docs.antora-supplemental.org/home/'
 const errors = []
 
 function log (msg) {
