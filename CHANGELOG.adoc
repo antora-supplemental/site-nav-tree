@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.6.12 - 2026-10-21
+
+=== Fixed
+
+* **404 nav hydration:** default start page is `/docs/` (hub start), not `/home/`; fall back to the first forest depth-0 link when the 404 article has no start anchor.
+
 == 0.6.11 - 2026-10-21
 
 === Fixed
