@@ -1,5 +1,11 @@
 = Changelog
 
+== 0.6.11 - 2026-10-21
+
+=== Fixed
+
+* **SoftNav current highlight after sibling nav clicks.** Hub forests keep relative cross-component hrefs (for example `../antora-live/data-model/`). `markCurrentByPath` matched those against `window.location`, which breaks once the reader leaves the start page (Design stays highlighted while Data model loads). Matching now resolves relative nav hrefs with the stored forest base (`data-snt-nav-base`); when nothing matches, stale `is-current-page` markers are cleared.
+
 == 0.6.10 - 2026-10-21
 
 === Changed

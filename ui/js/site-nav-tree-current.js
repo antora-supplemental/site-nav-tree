@@ -119,6 +119,20 @@
     }
   }
 
+  /** Pathname for matching nav links; relative hrefs use the forest base, not the live article URL. */
+  function navLinkPathname (a, menu) {
+    if (!a) return ''
+    menu = menu || document.querySelector('.nav-container [data-panel=menu]')
+    prepareNavMenu(menu)
+    var raw = a.getAttribute('href')
+    if (!raw || raw.charAt(0) === '#') return ''
+    if (isRelativeNavHref(raw)) {
+      var abs = resolveNavLinkUrl(raw, menu)
+      return abs ? normalizeHref(abs) : ''
+    }
+    return normalizeHref(raw)
+  }
+
   /** Copy site forest nav onto Antora's empty 404 layout (no page.navigation). */
   function hydrate404Nav () {
     if (!document.body || !document.body.classList.contains('status-404')) return
@@ -360,12 +374,18 @@
     if (!want) return
     var matches = []
     menu.querySelectorAll('a.nav-link').forEach(function (a) {
-      if (normalizeHref(a.getAttribute('href') || a.href) === want) {
+      if (navLinkPathname(a, menu) === want) {
         var li = a.closest('li.nav-item')
         if (li) matches.push(li)
       }
     })
-    if (!matches.length) return
+    if (!matches.length) {
+      menu.querySelectorAll('.nav-item.is-current-page').forEach(function (el) {
+        el.classList.remove('is-current-page')
+      })
+      siteNavTreeCurrent()
+      return
+    }
     var best = pickBestCurrentPageItem(matches, want, menu)
     if (!best) best = matches[0]
     menu.querySelectorAll('.nav-item.is-current-page').forEach(function (el) {
@@ -438,7 +458,10 @@
     var root = forestOwnerRootOf(li)
     if (!root) return ''
     var a = root.querySelector(':scope > .nav-link')
-    return a ? normalizeHref(a.getAttribute('href') || a.href) : ''
+    var menu =
+      (li && li.closest && li.closest('.nav-container [data-panel=menu]')) ||
+      document.querySelector('.nav-container [data-panel=menu]')
+    return a ? navLinkPathname(a, menu) : ''
   }
 
   function findForestOwnerRootForPath (menu, pathname) {
@@ -663,6 +686,7 @@
   window.siteNavTreeAbsolutizeNavHrefs = absolutizeNavLinkHrefs
   window.siteNavTreePrepareNavMenu = prepareNavMenu
   window.siteNavTreeResolveNavLink = resolveNavLinkUrl
+  window.siteNavTreeNavLinkPathname = navLinkPathname
   document.addEventListener('click', onToggleClick)
   document.addEventListener('click', onLabelClick, true)
 

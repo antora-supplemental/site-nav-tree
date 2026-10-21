@@ -260,6 +260,24 @@ test('siteNavTreeResolveNavLink uses stored base not current pathname', () => {
   assert.equal(url, 'https://docs.example/general-knowledge/explanation/internet-architecture/reliability/')
 })
 
+test('markCurrentByPath matches cross-component forest hrefs after SoftNav depth change', () => {
+  const design = item({ label: 'Design', href: '../antora-live/design/' })
+  const dataModel = item({ label: 'Data model', href: '../antora-live/data-model/' })
+  const liveRoot = item({
+    label: 'Antora Live',
+    href: '../antora-live/',
+    depth: 0,
+    kids: [design, dataModel],
+  })
+  const menu = new El('DIV', { attrs: { 'data-snt-nav-base': 'https://docs.example/docs/' } })
+  menu.append(new El('UL', { cls: ['nav-list', 'nav-menu'] }).append(liveRoot))
+  const { win } = load(menu, { pathname: '/antora-live/design/' })
+  design.classList.add('is-current-page')
+  win.siteNavTreeMarkCurrentByPath('/antora-live/data-model/')
+  assert.equal(design.classList.contains('is-current-page'), false)
+  assert.equal(dataModel.classList.contains('is-current-page'), true)
+})
+
 test('pickBestCurrentPageItem prefers owning component over cross-component xref', () => {
   const gkXref = item({ label: 'General Knowledge', href: '/general-knowledge/', depth: 2 })
   const devcentr = item({
