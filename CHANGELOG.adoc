@@ -2,6 +2,10 @@
 
 == [Unreleased]
 
+=== Changed
+
+* **SoftNavSignals:** `site-nav-tree-current.js` subscribes to `pageUrl` for early current-path marking when `@antora-supplemental/soft-nav-context` ≥ 0.2.0 is present.
+
 == 0.6.9 - 2026-10-21
 
 === Changed

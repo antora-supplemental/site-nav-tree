@@ -718,6 +718,24 @@
     restoreNavScroll()
   }
 
+  var navSignals =
+    typeof SoftNavSignals !== 'undefined'
+      ? SoftNavSignals
+      : typeof SoftNavContext !== 'undefined' && SoftNavContext.signals
+        ? SoftNavContext.signals
+        : null
+  if (navSignals) {
+    navSignals.subscribe('pageUrl', function (url) {
+      if (url && typeof markCurrentByPath === 'function') {
+        try {
+          markCurrentByPath(url)
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    })
+  }
+
   if (typeof bindSoftNavContext === 'function') {
     bindSoftNavContext({
       onBefore: beforeNav,
