@@ -2,6 +2,8 @@
 
 == [Unreleased]
 
+== 0.6.9 - 2026-10-21
+
 === Changed
 
 * **Nav tree filter:** prefer `bindSoftNavContext({ onBoot, onLoaded })` when `@antora-supplemental/soft-nav-context` is present; keep SoftNav / DOM fallbacks otherwise.
