@@ -699,20 +699,14 @@
   bindPanelScroll()
   hydrate404Nav()
 
-  function onSoftNavLoaded (fn) {
-    if (window.SoftNav && typeof window.SoftNav.on === 'function') window.SoftNav.on('loaded', fn)
-    else document.addEventListener('soft-nav:loaded', function (e) { fn(e.detail || {}) })
-  }
-  function onSoftNavBefore (fn) {
-    if (window.SoftNav && typeof window.SoftNav.on === 'function') window.SoftNav.on('before', fn)
-    else document.addEventListener('soft-nav:before', function (e) { fn(e.detail || {}) })
-  }
-  onSoftNavBefore(function () {
+  function beforeNav () {
     flushNavScroll()
     prepareNavMenu(document.querySelector('.nav-container [data-panel=menu]'))
-  })
-  onSoftNavLoaded(function (detail) {
-    if (detail && detail.url && typeof markCurrentByPath === 'function') {
+  }
+
+  function afterNav (detail) {
+    detail = detail || {}
+    if (detail.url && typeof markCurrentByPath === 'function') {
       try {
         markCurrentByPath(detail.url)
       } catch (e) {
@@ -722,5 +716,23 @@
     siteNavTreeCurrent()
     bindPanelScroll()
     restoreNavScroll()
-  })
+  }
+
+  if (typeof adtChromeBind === 'function') {
+    adtChromeBind({
+      onBefore: beforeNav,
+      onLoaded: afterNav,
+    })
+  } else {
+    function onSoftNavLoaded (fn) {
+      if (window.SoftNav && typeof SoftNav.on === 'function') SoftNav.on('loaded', fn)
+      else document.addEventListener('soft-nav:loaded', function (e) { fn(e.detail || {}) })
+    }
+    function onSoftNavBefore (fn) {
+      if (window.SoftNav && typeof SoftNav.on === 'function') SoftNav.on('before', fn)
+      else document.addEventListener('soft-nav:before', function (e) { fn(e.detail || {}) })
+    }
+    onSoftNavBefore(beforeNav)
+    onSoftNavLoaded(afterNav)
+  }
 })()
