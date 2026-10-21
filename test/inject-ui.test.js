@@ -2,7 +2,7 @@
 
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const { injectSiteNavTreeUi } = require('../lib/inject-ui')
+const { injectSiteNavTreeStyles, injectSiteNavTreeUi } = require('../lib/inject-ui')
 
 function mockCatalog (partials = {}) {
   const files = []
@@ -16,6 +16,17 @@ function mockCatalog (partials = {}) {
     addFile () {},
   }
 }
+
+test('injectSiteNavTreeStyles appends companion stylesheets to head-meta', () => {
+  const uiCatalog = mockCatalog({ 'head-meta': '<meta name="viewport" content="width=device-width">\n' })
+  const assets = []
+  uiCatalog.addFile = (file) => assets.push(file)
+  injectSiteNavTreeStyles(uiCatalog, '_', { filter: false })
+  const head = uiCatalog.findByType('partial').find((f) => f.stem === 'head-meta').contents.toString('utf8')
+  assert.match(head, /site-nav-tree-overview-label\.css/)
+  assert.match(head, /site-nav-tree-mobile-drawer\.css/)
+  assert.equal(assets.filter((f) => f.path.startsWith('css/site-nav-tree')).length, 2)
+})
 
 test('injectSiteNavTreeUi skips script tag when hub footer already loads companion', () => {
   const uiCatalog = mockCatalog({

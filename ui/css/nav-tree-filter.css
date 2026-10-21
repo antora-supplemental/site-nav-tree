@@ -10,6 +10,12 @@
   color: inherit;
 }
 
+@media screen and (max-width: 1023.5px) {
+  .nav-panel-menu[data-panel='menu'] .nav-tree-filter {
+    background: var(--valentus-canvas, var(--body-background, inherit));
+  }
+}
+
 .nav-tree-filter-input {
   box-sizing: border-box;
   width: 100%;

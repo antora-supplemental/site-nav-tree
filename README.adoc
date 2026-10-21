@@ -63,9 +63,11 @@ antora:
 
 == UI injection and nav filter
 
-Without `filter`, the extension only wraps navigation data — copy companion files from `ui/` into hub `supplemental-ui` as before, or set `injectUi: true` (alias `ui: true`) to inject `nav-menu` and `site-nav-tree-current.js` at `uiLoaded`.
+On every build, the extension injects companion **CSS** at `uiLoaded` (`site-nav-tree-overview-label.css`, `site-nav-tree-mobile-drawer.css`, and `nav-tree-filter.css` when the filter is on) and appends `<link>` tags to `head-meta`. Hubs do not need to copy those stylesheets into `supplemental-ui`.
 
-With `filter: true` or `filter: { enabled: true }`, the extension injects filter CSS/JS, sets `site.keys.site_nav_tree_filter`, and injects the companion partial + `site-nav-tree-current.js` unless `injectUi: false` or `ui: false`. Filtering is local DOM only (label substring match, debounced); it is not Lunr or semantic search. The filter script listens for `soft-nav:loaded` / `SoftNav.on('loaded')` and re-applies the query when SoftNav keeps the left panel (`swapNav: false`).
+Without `filter`, the extension only wraps navigation data unless you set `injectUi: true` (alias `ui: true`) to inject `nav-menu` and `site-nav-tree-current.js`, or copy those from `ui/` into hub `supplemental-ui` manually.
+
+With `filter: true` or `filter: { enabled: true }`, the extension also injects filter JS, sets `site.keys.site_nav_tree_filter`, and injects the companion partial + `site-nav-tree-current.js` unless `injectUi: false` or `ui: false`. Filtering is local DOM only (label substring match, debounced); it is not Lunr or semantic search. The filter script listens for `soft-nav:loaded` / `SoftNav.on('loaded')` and re-applies the query when SoftNav keeps the left panel (`swapNav: false`).
 
 Valentus prints the current component title above the tree. With site-wide roots that line is redundant — the injected `nav-menu` partial omits `valentus-nav-component-title`.
 
@@ -113,7 +115,7 @@ When you enable **site-nav-tree**, also ship **nav-typology** (+ companion UI co
 | Boolean (`true`) or object `{ enabled: true }`. Enables sidebar label filter + companion UI injection. Aliases: `navFilter`, `navTreeFilter`.
 
 | `injectUi` / `ui`
-| When `true`, inject companion partials/assets on `uiLoaded`. Default: `true` when `filter` is enabled, otherwise `false` (manual copy workflow).
+| When `true`, inject `nav-menu`, `site-nav-tree-current.js`, and filter JS on `uiLoaded`. Companion CSS always injects. Default: `true` when `filter` is enabled, otherwise `false` for partials/scripts (manual copy workflow).
 |===
 
 == Tradeoff

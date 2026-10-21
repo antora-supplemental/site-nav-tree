@@ -1,5 +1,15 @@
 = Changelog
 
+== 0.6.14 - 2026-10-21
+
+=== Fixed
+
+* **Mobile forest nav drawer:** `site-nav-tree-mobile-drawer.css` paints an opaque canvas fill below 1024px when hub brand CSS resets `--valentus-nav-bg` after Valentus `site-visual.css`. Nav filter sticky bar uses the same canvas on mobile (`nav-tree-filter.css`).
+
+=== Changed
+
+* **Companion styles always inject on `uiLoaded`** (overview label, mobile drawer, and filter CSS when enabled) even when `injectUi: false` — hubs that vendor `nav-menu.hbs` / `site-nav-tree-current.js` no longer need to copy CSS into `supplemental-ui` or link it from `head-meta`.
+
 == 0.6.13 - 2026-10-21
 
 === Fixed
