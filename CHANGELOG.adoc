@@ -1,5 +1,11 @@
 = Changelog
 
+== [Unreleased]
+
+=== Changed
+
+* **Nav tree filter:** prefer `bindSoftNavContext({ onBoot, onLoaded })` when `@antora-supplemental/soft-nav-context` is present; keep SoftNav / DOM fallbacks otherwise.
+
 == 0.6.8 - 2026-10-17
 
 === Fixed

@@ -143,15 +143,22 @@
     if (nav && input && input.value.trim()) applyFilter(nav, input.value)
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init)
-  } else {
-    init()
+  function wireSoftNav () {
+    if (typeof bindSoftNavContext === 'function') {
+      bindSoftNavContext({ onBoot: init, onLoaded: reapplyAfterNav })
+      return
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init)
+    } else {
+      init()
+    }
+    if (window.SoftNav && typeof window.SoftNav.on === 'function') {
+      window.SoftNav.on('loaded', reapplyAfterNav)
+    } else {
+      document.addEventListener('soft-nav:loaded', reapplyAfterNav)
+    }
   }
 
-  if (window.SoftNav && typeof window.SoftNav.on === 'function') {
-    window.SoftNav.on('loaded', reapplyAfterNav)
-  } else {
-    document.addEventListener('soft-nav:loaded', reapplyAfterNav)
-  }
+  wireSoftNav()
 })()
