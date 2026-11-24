@@ -21,10 +21,12 @@
 ;(function () {
   'use strict'
 
-  // v2: pathname keys (stable across URL depth / SoftNav absolutize)
-  var STORAGE_KEY = 'site-nav-tree:expanded-v2'
+  // v3: depth-prefixed expandable keys (prevents depth-0 root colliding with depth-1 Overview)
+  var STORAGE_KEY = 'site-nav-tree:expanded-v3'
   var SCROLL_KEY = 'site-nav-tree:scroll-y'
   var scrollSaveTimer = null
+  var navOriginIsRail = false
+  var lastMarkedPath = ''
 
   function normalizeHref (href) {
     if (!href) return ''
@@ -77,13 +79,14 @@
       if (!raw || raw.charAt(0) === '#') return
       if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) {
         var pathOnly = normalizeHref(raw)
-        if (pathOnly) a.setAttribute('href', pathOnly)
+        if (pathOnly && pathOnly !== raw) a.setAttribute('href', pathOnly)
         return
       }
       try {
         var resolved = new URL(raw, base.href)
         if (resolved.origin !== base.origin) return
-        a.setAttribute('href', normalizeHref(resolved.pathname))
+        var next = normalizeHref(resolved.pathname)
+        if (next && next !== raw) a.setAttribute('href', next)
       } catch (e2) {
         /* leave as-is */
       }
@@ -101,6 +104,9 @@
 
   function prepareNavMenu (menu, baseHref) {
     if (!menu) return
+    // Short-circuit O(N) scan once the live forest has already been absolutized
+    // (avoids O(N^2) DOM churn across hundreds of nav links on every SoftNav click).
+    if (!baseHref && menu.getAttribute('data-snt-hrefs-absolutized') === '1') return
     absolutizeNavLinkHrefs(menu, baseHref)
     if (menuHasRelativeNavHrefs(menu)) menu.removeAttribute('data-snt-hrefs-absolutized')
     else menu.setAttribute('data-snt-hrefs-absolutized', '1')
@@ -180,23 +186,30 @@
       })
   }
 
+  function isExpandableItem (el) {
+    if (!el || !el.querySelector) return false
+    return !!(el.querySelector(':scope > ul.nav-list') || el.querySelector(':scope > .nav-item-toggle'))
+  }
+
   function itemKey (el) {
+    var depth = String(navDepth(el))
     var link = el.querySelector(':scope > .nav-link')
     var href = link && link.getAttribute('href')
-    if (href) return 'h:' + normalizeHref(href)
+    if (href) return 'd' + depth + ':h:' + normalizeHref(href)
     var labelEl = el.querySelector(':scope > .nav-text, :scope > .nav-link')
     var label = ((labelEl && labelEl.textContent) || '').trim().replace(/\s+/g, ' ')
-    var parts = [(el.getAttribute('data-depth') || '0') + ':' + label]
+    var parts = [depth + ':' + label]
     var parent = el.parentElement ? el.parentElement.closest('li.nav-item') : null
     while (parent) {
+      var pdepth = String(navDepth(parent))
       var plink = parent.querySelector(':scope > .nav-link')
       var phref = plink && plink.getAttribute('href')
       if (phref) {
-        parts.unshift('h:' + normalizeHref(phref))
+        parts.unshift('d' + pdepth + ':h:' + normalizeHref(phref))
       } else {
         var plabelEl = parent.querySelector(':scope > .nav-text, :scope > .nav-link')
         var plabel = ((plabelEl && plabelEl.textContent) || '').trim().replace(/\s+/g, ' ')
-        parts.unshift((parent.getAttribute('data-depth') || '0') + ':' + plabel)
+        parts.unshift(pdepth + ':' + plabel)
       }
       parent = parent.parentElement ? parent.parentElement.closest('li.nav-item') : null
     }
@@ -229,7 +242,10 @@
   }
 
   function collectExpanded (menu) {
-    return [].slice.call(menu.querySelectorAll('.nav-item.is-active')).map(itemKey)
+    return [].slice
+      .call(menu.querySelectorAll('.nav-item.is-active'))
+      .filter(isExpandableItem)
+      .map(itemKey)
   }
 
   function applyExpanded (menu, keys) {
@@ -239,17 +255,103 @@
       want[k] = true
     })
     menu.querySelectorAll('.nav-item').forEach(function (el) {
-      if (want[itemKey(el)]) el.classList.add('is-active')
+      if (isExpandableItem(el) && want[itemKey(el)]) el.classList.add('is-active')
+    })
+  }
+
+  /**
+   * Stamp stable Style API part & state hooks (site-nav-tree-style-api@1) onto
+   * the live tree DOM so themes never depend on private internal classes.
+   */
+  function annotateStyleParts (menu) {
+    if (!menu || !menu.querySelectorAll) return
+    if (menu.setAttribute && !menu.getAttribute('data-snt-part')) {
+      menu.setAttribute('data-snt-part', 'panel')
+    }
+    var nav = menu.querySelector ? menu.querySelector('nav.nav-menu') : null
+    if (nav && nav.setAttribute && !nav.getAttribute('data-snt-part')) {
+      nav.setAttribute('data-snt-part', 'tree')
+    }
+    menu.querySelectorAll('li.nav-item').forEach(function (li) {
+      var isRoot = navDepth(li) === 0
+      li.setAttribute('data-snt-part', isRoot ? 'component-node' : 'node')
+      if (isExpandableItem(li)) {
+        li.setAttribute('data-snt-state', li.classList.contains('is-active') ? 'expanded' : 'collapsed')
+      } else if (li.classList.contains('is-current-page')) {
+        li.setAttribute('data-snt-state', 'current')
+      } else if (li.classList.contains('is-current-path')) {
+        li.setAttribute('data-snt-state', 'current-path')
+      } else if (li.removeAttribute) {
+        li.removeAttribute('data-snt-state')
+      }
+      var toggle = li.querySelector(':scope > .nav-item-toggle')
+      if (toggle) toggle.setAttribute('data-snt-part', isRoot ? 'component-expander' : 'expander')
+      var label = li.querySelector(':scope > .nav-link, :scope > .nav-text')
+      if (label) label.setAttribute('data-snt-part', isRoot ? 'component-label' : 'row')
     })
   }
 
   function persistMenu (menu) {
     if (!menu) return
+    annotateStyleParts(menu)
     saveExpanded(collectExpanded(menu))
+    updateNavHorizontalFades(menu)
+  }
+
+  function navTreeEl (panel) {
+    panel = panel || document.querySelector('.nav-container [data-panel=menu]')
+    if (!panel || !panel.querySelector) return null
+    return panel.querySelector('nav.nav-menu.nav-tree-only, nav.nav-menu.valentus-nav-tree-only, nav.nav-menu')
   }
 
   function navScrollEl () {
-    return document.querySelector('.nav-container [data-panel=menu]')
+    var panel = document.querySelector('.nav-container [data-panel=menu]')
+    if (!panel) return null
+    var tree = navTreeEl(panel)
+    if (tree && typeof tree.scrollHeight === 'number' && typeof tree.clientHeight === 'number') {
+      if (tree.scrollHeight > tree.clientHeight + 1 || (tree.getAttribute && tree.getAttribute('data-snt-part') === 'tree')) {
+        return tree
+      }
+    }
+    return panel
+  }
+
+  function updateNavHorizontalFades (panel) {
+    var tree = navTreeEl(panel)
+    if (!tree || typeof tree.scrollWidth !== 'number' || typeof tree.clientWidth !== 'number') return
+    var epsilon = 1
+    var maxScroll = tree.scrollWidth - tree.clientWidth
+    var canScroll = maxScroll > epsilon
+    var atStart = (tree.scrollLeft || 0) <= epsilon
+    var atEnd = (tree.scrollLeft || 0) >= maxScroll - epsilon
+    var fadeStart = canScroll && !atStart
+    var fadeEnd = canScroll && !atEnd
+    if (tree.classList && typeof tree.classList.toggle === 'function') {
+      tree.classList.toggle('valentus-nav-overflow-start', fadeStart)
+      tree.classList.toggle('valentus-nav-overflow-end', fadeEnd)
+    }
+    if (tree.setAttribute) {
+      if (fadeStart) tree.setAttribute('data-snt-overflow-start', 'true')
+      else if (tree.removeAttribute) tree.removeAttribute('data-snt-overflow-start')
+      if (fadeEnd) tree.setAttribute('data-snt-overflow-end', 'true')
+      else if (tree.removeAttribute) tree.removeAttribute('data-snt-overflow-end')
+    }
+  }
+
+  function ensureCurrentNodeVisible (targetEl) {
+    if (!targetEl) return
+    var scroller = navScrollEl()
+    if (!scroller || typeof scroller.getBoundingClientRect !== 'function' || typeof targetEl.getBoundingClientRect !== 'function') {
+      return
+    }
+    var box = scroller.getBoundingClientRect()
+    var rect = targetEl.getBoundingClientRect()
+    if (!box.height || !rect.height) return
+    var visible = rect.top >= box.top && rect.bottom <= box.bottom
+    if (visible) return
+    var delta = rect.top - box.top - Math.min(48, box.height * 0.15)
+    scroller.scrollTop = Math.max(0, (scroller.scrollTop || 0) + delta)
+    saveNavScrollNow()
   }
 
   function saveNavScrollNow () {
@@ -302,7 +404,7 @@
    * the current-page path without collapsing non-current siblings the reader
    * left open under other (or the same) component roots.
    */
-  function siteNavTreeCurrent () {
+  function siteNavTreeCurrent (explicitPath) {
     var menu = document.querySelector('.nav-container [data-panel=menu]')
     prepareNavMenu(menu)
     if (!menu) {
@@ -315,10 +417,12 @@
     }
 
     var remembered = loadExpanded()
+    var wantPath = explicitPath ? normalizeHref(explicitPath) : currentPathname()
 
     var currents = [].slice.call(menu.querySelectorAll('.nav-item.is-current-page'))
     if (!currents.length) {
       applyExpanded(menu, remembered)
+      maybeExpandForestRootLanding(menu, wantPath)
       persistMenu(menu)
       restoreNavScroll()
       markOverviewLabels(menu)
@@ -331,7 +435,6 @@
       return
     }
 
-    var wantPath = currentPathname()
     var best = pickBestCurrentPageItem(currents, wantPath, menu)
     if (!best) best = currents[0]
 
@@ -358,7 +461,14 @@
     applyExpanded(menu, remembered)
     maybeExpandForestRootLanding(menu, wantPath)
     persistMenu(menu)
-    restoreNavScroll()
+    if (navOriginIsRail) {
+      restoreNavScroll()
+    } else {
+      restoreNavScroll()
+      var ownerRoot = findForestOwnerRootForPath(menu, wantPath)
+      var landingRoot = ownerRoot && normalizeHref(wantPath) === componentRootHref(ownerRoot) ? ownerRoot : best
+      ensureCurrentNodeVisible(landingRoot)
+    }
     markOverviewLabels(menu)
     linkifyBreadcrumbSectionCrumbs(menu)
     try {
@@ -389,16 +499,21 @@
       menu.querySelectorAll('.nav-item.is-current-page').forEach(function (el) {
         el.classList.remove('is-current-page')
       })
-      siteNavTreeCurrent()
+      lastMarkedPath = want
+      siteNavTreeCurrent(want)
       return
     }
     var best = pickBestCurrentPageItem(matches, want, menu)
     if (!best) best = matches[0]
+    if (lastMarkedPath === want && best.classList.contains('is-current-page') && best.classList.contains('is-active')) {
+      return
+    }
     menu.querySelectorAll('.nav-item.is-current-page').forEach(function (el) {
       el.classList.remove('is-current-page')
     })
     best.classList.add('is-current-page')
-    siteNavTreeCurrent()
+    lastMarkedPath = want
+    siteNavTreeCurrent(want)
   }
 
   function isOverviewLabel (text) {
@@ -630,7 +745,7 @@
    * Nodes without an Overview child keep stock behavior.
    */
   function onLabelClick (e) {
-    if (e.defaultPrevented || hasModifier(e)) return
+    if (hasModifier(e)) return
     var target = e.target
     if (!target || !target.closest) return
     var menu = document.querySelector('.nav-container [data-panel=menu]')
@@ -643,9 +758,15 @@
     var li = label.parentNode
     if (!li || li.tagName !== 'LI' || !li.classList.contains('nav-item')) return
 
+    navOriginIsRail = true
+
     var overview = overviewLinkFor(li)
     if (!overview) return
 
+    // SoftNav registers its capture listener before site-nav-tree-current.js and
+    // calls e.preventDefault() on linked component roots. Still expand and persist
+    // the clicked component root so its sections open immediately; only skip
+    // calling openOverview() a second time if SoftNav already took the navigation.
     li.classList.add('is-active')
     if (navDepth(li) === 0) expandForestRootSections(li)
 
@@ -658,10 +779,18 @@
         persistMenu(menu)
         return
       }
-      e.preventDefault()
-      openOverview(overview)
+      persistMenu(menu)
+      if (!e.defaultPrevented) {
+        e.preventDefault()
+        openOverview(overview)
+      }
       return
     }
+    if (e.defaultPrevented) {
+      persistMenu(menu)
+      return
+    }
+    persistMenu(menu)
     e.stopPropagation()
     e.preventDefault()
     openOverview(overview)
@@ -693,6 +822,8 @@
   window.siteNavTreePrepareNavMenu = prepareNavMenu
   window.siteNavTreeResolveNavLink = resolveNavLinkUrl
   window.siteNavTreeNavLinkPathname = navLinkPathname
+  window.siteNavTreeAnnotateStyleParts = annotateStyleParts
+  window.siteNavTreeUpdateHorizontalFades = updateNavHorizontalFades
   document.addEventListener('click', onToggleClick)
   document.addEventListener('click', onLabelClick, true)
 
@@ -702,15 +833,38 @@
     function (e) {
       var el = navScrollEl()
       if (!el) return
-      if (e.target === el || (e.target && el.contains(e.target))) saveNavScroll()
+      if (e.target === el || (e.target && el.contains(e.target))) {
+        saveNavScroll()
+        updateNavHorizontalFades()
+      }
     },
     true
   )
   function bindPanelScroll () {
     var el = navScrollEl()
-    if (!el || el.getAttribute('data-snt-scroll-bound')) return
-    el.setAttribute('data-snt-scroll-bound', '1')
-    el.addEventListener('scroll', saveNavScroll, { passive: true })
+    if (el && !el.getAttribute('data-snt-scroll-bound')) {
+      el.setAttribute('data-snt-scroll-bound', '1')
+      el.addEventListener('scroll', saveNavScroll, { passive: true })
+    }
+    var tree = navTreeEl()
+    if (tree && !tree.getAttribute('data-snt-hscroll-bound')) {
+      tree.setAttribute('data-snt-hscroll-bound', '1')
+      var syncFades = function () {
+        updateNavHorizontalFades()
+      }
+      tree.addEventListener('scroll', syncFades, { passive: true })
+      if (typeof window.addEventListener === 'function') {
+        window.addEventListener('resize', syncFades, { passive: true })
+      }
+      if (typeof ResizeObserver === 'function') {
+        try {
+          new ResizeObserver(syncFades).observe(tree)
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    }
+    updateNavHorizontalFades()
   }
   bindPanelScroll()
   window.addEventListener('beforeunload', flushNavScroll)
@@ -719,8 +873,11 @@
     function (e) {
       var a = e.target && e.target.closest && e.target.closest('a.nav-link')
       if (!a) return
-      var panel = navScrollEl()
-      if (panel && panel.contains(a)) flushNavScroll()
+      var panel = document.querySelector('.nav-container [data-panel=menu]')
+      if (panel && panel.contains(a)) {
+        navOriginIsRail = true
+        flushNavScroll()
+      }
     },
     true
   )
@@ -742,10 +899,11 @@
       } catch (e) {
         /* ignore */
       }
+    } else {
+      siteNavTreeCurrent()
     }
-    siteNavTreeCurrent()
     bindPanelScroll()
-    restoreNavScroll()
+    navOriginIsRail = false
   }
 
   var navSignals =

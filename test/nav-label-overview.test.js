@@ -89,13 +89,21 @@ class El {
 }
 
 function matches (el, sel) {
-  const m = /^([a-z]*)((?:\.[\w-]+)*)$/i.exec(sel)
+  const m = /^([a-z]*)((?:\.[\w-]+)*)((?:\[[^\]]+\])*)$/i.exec(sel)
   if (!m) return false
   if (m[1] && el.tagName !== m[1].toUpperCase()) return false
-  return m[2]
+  const clsOk = m[2]
     .split('.')
     .filter(Boolean)
     .every((c) => el.classList.contains(c))
+  if (!clsOk) return false
+  if (m[3]) {
+    for (const am of m[3].matchAll(/\[([\w-]+)(?:=['"]?([^'"\]]*)['"]?)?\]/g)) {
+      const val = el.getAttribute(am[1])
+      if (am[2] !== undefined ? val !== am[2] : val == null) return false
+    }
+  }
+  return true
 }
 
 function item ({ label, href, kids = [], depth = null }) {
@@ -192,7 +200,7 @@ test('unlinked section label expands and opens Overview via SoftNav', () => {
   assert.equal(ov.children[0].clicks, 0)
   assert.equal(navigated.length, 1)
   assert.ok(e.stopped, 'stock toggle suppressed so label never collapses')
-  assert.ok(store['site-nav-tree:expanded-v2'])
+  assert.ok(store['site-nav-tree:expanded-v3'])
 })
 
 test('linked component root expands and lets its own link navigate', () => {
@@ -386,4 +394,95 @@ test('nodes without Overview, toggles, and modified clicks keep stock behavior',
   assert.equal(core.classList.contains('is-active'), false)
   s2.onLabelClick(event(core.children[1], { ctrlKey: true }))
   assert.equal(ov.children[0].clicks, 0)
+})
+
+test('returning from How-to Guides to Home expands Home and its depth-1 sections', () => {
+  const homeOverview = item({ label: 'Overview', href: '../../home/', depth: 1 })
+  const docsSite = item({
+    label: 'Docs site',
+    depth: 1,
+    kids: [item({ label: 'Antora UI branding', href: '../../home/docs-site/antora-ui-branding/', depth: 2 })],
+  })
+  const nomenclature = item({
+    label: 'Nomenclature',
+    depth: 1,
+    kids: [item({ label: 'Glossary', href: '../../home/glossary/', depth: 2 })],
+  })
+  const homeRoot = item({
+    label: 'Home',
+    href: '../../home/',
+    depth: 0,
+    kids: [homeOverview, docsSite, nomenclature],
+  })
+  const howtoOverview = item({ label: 'Overview', href: '../how-to/', depth: 2 })
+  const howto = item({ label: 'How-to Guides', depth: 1, kids: [howtoOverview] })
+  const gkRoot = item({
+    label: 'General Knowledge',
+    href: '../',
+    depth: 0,
+    kids: [item({ label: 'Overview', href: '../', depth: 1 }), howto],
+  })
+  const menu = new El('DIV')
+  menu.append(new El('UL', { cls: ['nav-list', 'nav-menu'] }).append(homeRoot, gkRoot))
+  howtoOverview.classList.add('is-current-page')
+  const { win } = load(menu, { pathname: '/general-knowledge/how-to/' })
+
+  // SoftNav navigates back to /home/ (even before window.location updates)
+  win.siteNavTreeMarkCurrentByPath('/home/')
+
+  assert.equal(homeRoot.classList.contains('is-active'), true)
+  assert.equal(homeRoot.classList.contains('is-current-path'), true)
+  assert.equal(homeRoot.classList.contains('is-current-page'), false)
+  assert.equal(homeOverview.classList.contains('is-current-page'), true)
+  assert.equal(docsSite.classList.contains('is-active'), true, 'Home sub-section Docs site must expand')
+  assert.equal(nomenclature.classList.contains('is-active'), true, 'Home sub-section Nomenclature must expand')
+  assert.equal(homeRoot.getAttribute('data-snt-part'), 'component-node')
+  assert.equal(homeRoot.getAttribute('data-snt-state'), 'expanded')
+})
+
+test('prepareNavMenu short-circuits once absolutized (avoids O(N^2) DOM thrash)', () => {
+  const leaf = item({ label: 'Changelog', href: 'changelog/', depth: 1 })
+  const homeRoot = item({ label: 'Home', href: './', depth: 0, kids: [leaf] })
+  const menu = new El('DIV')
+  menu.append(new El('UL', { cls: ['nav-list', 'nav-menu'] }).append(homeRoot))
+  const { win } = load(menu, { pathname: '/home/' })
+
+  let setCalls = 0
+  const link = leaf.querySelector(':scope > .nav-link')
+  const origSet = link.setAttribute.bind(link)
+  link.setAttribute = (n, v) => {
+    if (n === 'href') setCalls++
+    return origSet(n, v)
+  }
+
+  for (let i = 0; i < 50; i++) {
+    win.siteNavTreePrepareNavMenu(menu)
+  }
+  assert.equal(setCalls, 0, 'already-absolutized menu must not re-mutate href attributes')
+})
+
+test('onLabelClick still expands depth-0 component root when SoftNav already called preventDefault', () => {
+  const ov = item({ label: 'Overview', href: '/home/', depth: 1 })
+  const sec = item({ label: 'Docs site', depth: 1, kids: [item({ label: 'A', href: '/home/a/', depth: 2 })] })
+  const homeRoot = item({ label: 'Home', href: '/home/', depth: 0, kids: [ov, sec] })
+  const { onLabelClick } = setup(homeRoot, { pathname: '/general-knowledge/how-to/' })
+  const e = event(homeRoot.children[1].children[0], { defaultPrevented: true })
+  onLabelClick(e)
+  assert.equal(homeRoot.classList.contains('is-active'), true)
+  assert.equal(sec.classList.contains('is-active'), true)
+})
+
+test('collapsing Home does not collide with Overview leaf key in storage', () => {
+  const ov = item({ label: 'Overview', href: '/home/', depth: 1 })
+  const homeRoot = item({ label: 'Home', href: '/home/', depth: 0, kids: [ov] })
+  const other = item({ label: 'Other', href: '/other/', depth: 0 })
+  const menu = new El('DIV')
+  menu.append(new El('UL', { cls: ['nav-list', 'nav-menu'] }).append(homeRoot, other))
+  other.classList.add('is-current-page')
+  const { win, store } = load(menu, { pathname: '/other/' })
+  ov.classList.add('is-active') // leaf had is-active
+  homeRoot.classList.remove('is-active') // root collapsed
+  win.siteNavTreeCurrent('/other/')
+  const saved = JSON.parse(store['site-nav-tree:expanded-v3'] || '[]')
+  assert.equal(saved.includes('d0:h:/home/'), false, 'collapsed depth-0 root must not be kept open by its leaf')
 })

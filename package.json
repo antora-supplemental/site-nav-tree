@@ -4,15 +4,24 @@
   "description": "Antora extension: fold curated components into the sidebar nav tree while keeping default nav-tree expand/collapse behavior",
   "main": "lib/index.js",
   "exports": {
-    ".": "./lib/index.js"
+    ".": "./lib/index.js",
+    "./validate-style": "./lib/validate-style.js",
+    "./style-contract.json": "./style-contract.json"
   },
   "files": [
     "lib/**/*",
     "ui/**/*",
+    "style-contract.json",
     "README.adoc",
     "CHANGELOG.adoc",
     "LICENSE"
   ],
+  "antoraRegistry": {
+    "layers": ["bolt-on"],
+    "provides": {
+      "site-nav-tree-style-api": "1"
+    }
+  },
   "scripts": {
     "test": "node --test test/*.test.js"
   },

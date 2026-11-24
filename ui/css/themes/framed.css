@@ -1,0 +1,106 @@
+/*
+ * @antora-supplemental/site-nav-tree — "framed" theme.
+ *
+ * Implements the site-nav-tree-style-api@1 contract:
+ * - Targets only public [data-snt-theme="framed"] + [data-snt-part="..."] / [data-snt-state="..."] hooks.
+ * - Reads colors from --cs-* / --valentus-* tokens through --snt-* surface variables.
+ * - Never overrides layout containment or horizontal scrolling on [data-snt-part="tree"].
+ *
+ * Visual design:
+ * - Top-level Antora component nodes have a crisp square border with a faint theme border color.
+ * - Component expanders are minimal small filled triangles vertically centered in the row.
+ */
+[data-snt-part='tree'][data-snt-theme='framed'] {
+  --snt-component-border-width: 1px;
+  --snt-component-border-color: var(
+    --cs-border-subtle,
+    var(
+      --valentus-border-subtle,
+      color-mix(in srgb, var(--cs-border, var(--valentus-border, currentColor)) 42%, transparent)
+    )
+  );
+  --snt-component-radius: 0px;
+  --snt-component-bg: transparent;
+  --snt-component-gap: 0.35rem;
+  --snt-component-pad-block: 0.25rem;
+  --snt-component-pad-inline: 0.35rem;
+  --snt-component-row-height: 1.65rem;
+  --snt-component-expander-hit: 1.1rem;
+  --snt-component-expander-size: 0.4375rem;
+  --snt-component-expander-color: var(--cs-ink-muted, var(--valentus-nav-item-toggle, currentColor));
+  --snt-component-expander-color-hover: var(--cs-ink, var(--valentus-nav-item-toggle-hover, currentColor));
+}
+
+[data-snt-part='tree'][data-snt-theme='framed'] [data-snt-part='component-node'] {
+  border: var(--snt-component-border-width) solid var(--snt-component-border-color);
+  border-radius: var(--snt-component-radius);
+  background: var(--snt-component-bg);
+  margin-block: 0 var(--snt-component-gap);
+  padding: var(--snt-component-pad-block) var(--snt-component-pad-inline);
+  box-sizing: border-box;
+  min-width: max-content;
+}
+
+[data-snt-part='tree'][data-snt-theme='framed'] [data-snt-part='component-node']:last-child {
+  margin-block-end: 0;
+}
+
+[data-snt-part='tree'][data-snt-theme='framed'] [data-snt-part='component-label'] {
+  min-height: var(--snt-component-row-height);
+  display: inline-flex;
+  align-items: center;
+  margin-left: calc(var(--snt-component-expander-hit) + 0.25rem) !important;
+  min-width: calc(100% - (var(--snt-component-expander-hit) + 0.25rem)) !important;
+  border-radius: var(--snt-component-radius);
+}
+
+/* Minimal filled triangle expander, vertically centered in the component header row. */
+[data-snt-part='tree'][data-snt-theme='framed'] [data-snt-part='component-expander'] {
+  position: absolute;
+  left: var(--snt-component-pad-inline);
+  top: var(--snt-component-pad-block) !important;
+  width: var(--snt-component-expander-hit) !important;
+  height: var(--snt-component-row-height) !important;
+  min-width: var(--snt-component-expander-hit);
+  min-height: var(--snt-component-row-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0 !important;
+  color: var(--snt-component-expander-color);
+  transform: none !important;
+  opacity: 0.82;
+}
+
+[data-snt-part='tree'][data-snt-theme='framed'] [data-snt-part='component-expander']:hover {
+  color: var(--snt-component-expander-color-hover);
+  opacity: 1;
+}
+
+[data-snt-part='tree'][data-snt-theme='framed'] [data-snt-part='component-expander']::before {
+  content: '';
+  position: static;
+  inset: auto;
+  display: block;
+  width: var(--snt-component-expander-size);
+  height: var(--snt-component-expander-size);
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='4,2.5 13,8 4,13.5' fill='black'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='4,2.5 13,8 4,13.5' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transform: rotate(0deg);
+  transform-origin: 50% 50%;
+  transition: transform 0.15s ease;
+}
+
+[data-snt-part='tree'][data-snt-theme='framed']
+  [data-snt-part='component-node'][data-snt-state='expanded']
+  > [data-snt-part='component-expander']::before {
+  transform: rotate(90deg);
+}

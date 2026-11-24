@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test')
 const assert = require('node:assert/strict')
-const { parseNavFilter, resolveInjectUi } = require('../lib/parse-config')
+const { parseNavFilter, parseNavTheme, resolveInjectUi } = require('../lib/parse-config')
 
 describe('parseNavFilter', () => {
   it('accepts boolean filter and aliases', () => {
@@ -33,5 +33,14 @@ describe('resolveInjectUi', () => {
     assert.equal(resolveInjectUi({}, false), false)
     assert.equal(resolveInjectUi({ injectUi: true }, false), true)
     assert.equal(resolveInjectUi({ ui: true }, false), true)
+  })
+})
+
+describe('parseNavTheme', () => {
+  it('defaults to default and accepts framed', () => {
+    assert.equal(parseNavTheme({}), 'default')
+    assert.equal(parseNavTheme({ theme: 'framed' }), 'framed')
+    assert.equal(parseNavTheme({ theme: 'FRAMED' }), 'framed')
+    assert.equal(parseNavTheme({ theme: 'unknown' }), 'default')
   })
 })

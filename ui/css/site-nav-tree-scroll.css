@@ -1,0 +1,179 @@
+/*
+ * Site nav tree scrollport + horizontal scroll + left/right edge fades (desktop & mobile).
+ *
+ * Keeps [data-panel=menu] as a non-scrolling flex column so the filter input stays pinned
+ * at the top and nav.nav-menu is the single two-axis scrollport (vertical + horizontal).
+ * That pins the horizontal scrollbar to the bottom of the visible rail/drawer on both
+ * desktop and mobile and pairs cleanly with the dynamic left/right edge-fade mask.
+ */
+:root {
+  --snt-scroll-fade: var(--valentus-nav-scroll-fade, 1.25rem);
+  --snt-scrollbar-size: 6px;
+  --snt-scrollbar-thumb: var(
+    --cs-border,
+    var(--valentus-border, rgba(128, 128, 128, 0.45))
+  );
+  --snt-scrollbar-thumb-hover: var(
+    --cs-ink-muted,
+    var(--valentus-ink-muted, rgba(128, 128, 128, 0.7))
+  );
+  --snt-component-border-color: var(
+    --cs-border-subtle,
+    var(
+      --valentus-border-subtle,
+      color-mix(in srgb, var(--cs-border, var(--valentus-border, currentColor)) 42%, transparent)
+    )
+  );
+}
+
+.nav-panel-menu[data-snt-part='panel'],
+.nav-panel-menu:has(> nav.nav-menu.nav-tree-only),
+.nav-panel-menu:has(> nav.nav-menu.valentus-nav-tree-only) {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box;
+}
+
+.nav-panel-menu[data-snt-part='panel'] > .nav-tree-filter,
+.nav-panel-menu > .nav-tree-filter[data-snt-part='filter'] {
+  flex: 0 0 auto;
+  position: static;
+}
+
+body.valentus-body .nav nav.nav-menu.nav-tree-only,
+body.valentus-body .nav nav.nav-menu.valentus-nav-tree-only,
+nav.nav-menu.nav-tree-only,
+nav.nav-menu.valentus-nav-tree-only,
+nav.nav-menu[data-snt-part='tree'] {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: var(--snt-scrollbar-thumb) transparent;
+}
+
+nav.nav-menu.nav-tree-only::-webkit-scrollbar,
+nav.nav-menu.valentus-nav-tree-only::-webkit-scrollbar,
+nav.nav-menu[data-snt-part='tree']::-webkit-scrollbar {
+  display: block;
+  width: var(--snt-scrollbar-size);
+  height: var(--snt-scrollbar-size);
+}
+
+nav.nav-menu.nav-tree-only::-webkit-scrollbar-track,
+nav.nav-menu.valentus-nav-tree-only::-webkit-scrollbar-track,
+nav.nav-menu[data-snt-part='tree']::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+nav.nav-menu.nav-tree-only::-webkit-scrollbar-thumb,
+nav.nav-menu.valentus-nav-tree-only::-webkit-scrollbar-thumb,
+nav.nav-menu[data-snt-part='tree']::-webkit-scrollbar-thumb {
+  background: var(--snt-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+nav.nav-menu.nav-tree-only::-webkit-scrollbar-thumb:hover,
+nav.nav-menu.valentus-nav-tree-only::-webkit-scrollbar-thumb:hover,
+nav.nav-menu[data-snt-part='tree']::-webkit-scrollbar-thumb:hover {
+  background: var(--snt-scrollbar-thumb-hover);
+}
+
+/* Keep labels single-line with intrinsic width so overflowing rows widen the scrollport
+   and engage horizontal scrolling + left/right edge fades (desktop & mobile). */
+nav.nav-menu.nav-tree-only .nav-item > .nav-link,
+nav.nav-menu.valentus-nav-tree-only .nav-item > .nav-link,
+nav.nav-menu.nav-tree-only .nav-item > .nav-text,
+nav.nav-menu.valentus-nav-tree-only .nav-item > .nav-text {
+  width: max-content !important;
+  max-width: none !important;
+  white-space: nowrap;
+}
+
+nav.nav-menu.nav-tree-only .nav-item > .nav-link > .nav-text,
+nav.nav-menu.valentus-nav-tree-only .nav-item > .nav-link > .nav-text,
+nav.nav-menu.nav-tree-only .nav-item > .nav-text > .nav-typology-label,
+nav.nav-menu.valentus-nav-tree-only .nav-item > .nav-text > .nav-typology-label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Dynamic left/right edge fades driven by site-nav-tree-current.js (and site-visual.js). */
+nav.nav-menu[data-snt-overflow-end='true']:not([data-snt-overflow-start='true']),
+nav.nav-menu.valentus-nav-overflow-end:not(.valentus-nav-overflow-start) {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black calc(100% - var(--snt-scroll-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    black calc(100% - var(--snt-scroll-fade)),
+    transparent 100%
+  );
+}
+
+nav.nav-menu[data-snt-overflow-start='true']:not([data-snt-overflow-end='true']),
+nav.nav-menu.valentus-nav-overflow-start:not(.valentus-nav-overflow-end) {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--snt-scroll-fade),
+    black 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--snt-scroll-fade),
+    black 100%
+  );
+}
+
+nav.nav-menu[data-snt-overflow-start='true'][data-snt-overflow-end='true'],
+nav.nav-menu.valentus-nav-overflow-start.valentus-nav-overflow-end {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--snt-scroll-fade),
+    black calc(100% - var(--snt-scroll-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--snt-scroll-fade),
+    black calc(100% - var(--snt-scroll-fade)),
+    transparent 100%
+  );
+}
+
+@media screen and (max-width: 1023.5px) {
+  .nav-container .nav,
+  .nav-container .nav .panels {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+  }
+
+  .nav-container .nav .panels {
+    flex: 1 1 auto !important;
+    height: 100% !important;
+  }
+}

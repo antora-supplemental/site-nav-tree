@@ -2,9 +2,14 @@
  * Condensed nav drawer (site-nav-tree forest). Valentus sets --valentus-nav-bg on
  * desktop; hub brand CSS loaded after site-visual.css can reset the token to
  * transparent and leave the overlay see-through. Paint the shell from canvas
- * when the forest nav is active (nav-tree-only partial).
+ * when the forest nav is active (nav-tree-only partial), and stack the drawer
+ * above the mobile search dock (z-index: 15) and below the sticky header (30).
  */
 @media screen and (max-width: 1023.5px) {
+  .nav-container {
+    z-index: 25 !important;
+  }
+
   .nav-container,
   .nav,
   .nav .panels,

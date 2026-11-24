@@ -3,9 +3,9 @@
   Component titles live in the tree roots - do not also print valentus-nav-component-title.
   Keeps stock nav-tree partial + Default UI / Valentus expand-collapse JS.
 }}
-<div class="nav-panel-menu is-active" data-panel="menu">
+<div class="nav-panel-menu is-active" data-panel="menu" data-snt-part="panel">
   {{#if site.keys.site_nav_tree_filter}}
-  <div class="nav-tree-filter">
+  <div class="nav-tree-filter" data-snt-part="filter">
     <input
       class="nav-tree-filter-input"
       type="search"
@@ -13,10 +13,11 @@
       spellcheck="false"
       aria-label="Filter navigation"
       placeholder="Filter navigation…"
-      data-nav-tree-filter>
+      data-nav-tree-filter
+      data-snt-part="filter-input">
   </div>
   {{/if}}
-  <nav class="nav-menu nav-tree-only valentus-nav-tree-only" aria-label="Site documentation">
+  <nav class="nav-menu nav-tree-only valentus-nav-tree-only" aria-label="Site documentation" data-snt-part="tree" data-snt-theme="{{or site.keys.site_nav_tree_theme 'default'}}">
     <button class="nav-menu-toggle" aria-label="Toggle expand and collapse of all item groups" style="display: none"></button>
     {{#with page.navigation}}
     {{> nav-tree navigation=this}}

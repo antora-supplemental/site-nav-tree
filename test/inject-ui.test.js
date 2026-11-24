@@ -25,7 +25,18 @@ test('injectSiteNavTreeStyles appends companion stylesheets to head-meta', () =>
   const head = uiCatalog.findByType('partial').find((f) => f.stem === 'head-meta').contents.toString('utf8')
   assert.match(head, /site-nav-tree-overview-label\.css/)
   assert.match(head, /site-nav-tree-mobile-drawer\.css/)
-  assert.equal(assets.filter((f) => f.path.startsWith('css/site-nav-tree')).length, 2)
+  assert.match(head, /site-nav-tree-scroll\.css/)
+  assert.equal(assets.filter((f) => f.path.startsWith('css/site-nav-tree')).length, 3)
+})
+
+test('injectSiteNavTreeStyles appends framed theme stylesheet when theme is framed', () => {
+  const uiCatalog = mockCatalog({ 'head-meta': '<meta name="viewport" content="width=device-width">\n' })
+  const assets = []
+  uiCatalog.addFile = (file) => assets.push(file)
+  injectSiteNavTreeStyles(uiCatalog, '_', { filter: false, theme: 'framed' })
+  const head = uiCatalog.findByType('partial').find((f) => f.stem === 'head-meta').contents.toString('utf8')
+  assert.match(head, /site-nav-tree-theme-framed\.css/)
+  assert.ok(assets.some((f) => f.path === 'css/site-nav-tree-theme-framed.css'))
 })
 
 test('injectSiteNavTreeUi skips script tag when hub footer already loads companion', () => {

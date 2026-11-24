@@ -1,0 +1,56 @@
+{
+  "contract": "site-nav-tree-style-api",
+  "version": "1.0.0",
+  "namespace": "snt",
+  "themeAttribute": "data-snt-theme",
+  "partAttribute": "data-snt-part",
+  "stateAttribute": "data-snt-state",
+  "allowedParts": [
+    "panel",
+    "filter",
+    "filter-input",
+    "tree",
+    "component-node",
+    "component-expander",
+    "component-label",
+    "node",
+    "expander",
+    "row"
+  ],
+  "allowedStates": [
+    "expanded",
+    "collapsed",
+    "current",
+    "current-path"
+  ],
+  "allowedTokens": [
+    "--snt-scroll-fade",
+    "--snt-scrollbar-size",
+    "--snt-scrollbar-thumb",
+    "--snt-scrollbar-thumb-hover",
+    "--snt-component-border-width",
+    "--snt-component-border-color",
+    "--snt-component-radius",
+    "--snt-component-bg",
+    "--snt-component-gap",
+    "--snt-component-pad-block",
+    "--snt-component-pad-inline",
+    "--snt-component-row-height",
+    "--snt-component-expander-hit",
+    "--snt-component-expander-size",
+    "--snt-component-expander-color",
+    "--snt-component-expander-color-hover"
+  ],
+  "forbiddenInThemes": {
+    "tree": [
+      "overflow",
+      "overflow-x",
+      "overflow-y"
+    ],
+    "panel": [
+      "overflow",
+      "overflow-x",
+      "overflow-y"
+    ]
+  }
+}
